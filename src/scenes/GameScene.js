@@ -9,6 +9,9 @@ const JUMP_VELOCITY = -380;
 /** Minimum horizontal pointer travel (px) before a swipe is recognised. */
 const SWIPE_THRESHOLD = 15;
 
+/** Colour used for the swipe-zone border and label (purple). */
+const SWIPE_ZONE_COLOR = 0xaa88ff;
+
 /**
  * GameScene — the main gameplay scene.
  * Renders a square room with a circle player that can be moved
@@ -24,16 +27,37 @@ export default class GameScene extends Phaser.Scene {
 
     this.cameras.main.setBackgroundColor('#1a1a2e');
 
-    // Square room — centered, leaving equal padding on all sides
-    const padding = 40;
-    const roomSize = Math.min(width, height) - padding * 2;
+    // Square room — top-aligned, leaving space below for the swipe zone
+    const topPadding = 20;
+    const sidePadding = 40;
+    const swipeZoneHeight = 80;
+    const swipeZoneGap = 15;
+    const bottomPadding = 20;
+
+    const maxRoomWidth = width - sidePadding * 2;
+    const maxRoomHeight = height - topPadding - swipeZoneGap - swipeZoneHeight - bottomPadding;
+    const roomSize = Math.min(maxRoomWidth, maxRoomHeight);
     const roomX = (width - roomSize) / 2;
-    const roomY = (height - roomSize) / 2;
+    const roomY = topPadding;
 
     // Draw visible room outline
     const graphics = this.add.graphics();
     graphics.lineStyle(4, 0x44aaff, 1);
     graphics.strokeRect(roomX, roomY, roomSize, roomSize);
+
+    // Swipe zone — coloured rectangle below the room
+    const swipeZoneY = roomY + roomSize + swipeZoneGap;
+    graphics.fillStyle(0x2a1a4e, 0.9);
+    graphics.fillRect(roomX, swipeZoneY, roomSize, swipeZoneHeight);
+    graphics.lineStyle(2, SWIPE_ZONE_COLOR, 1);
+    graphics.strokeRect(roomX, swipeZoneY, roomSize, swipeZoneHeight);
+
+    this.add.text(
+      roomX + roomSize / 2,
+      swipeZoneY + swipeZoneHeight / 2,
+      '↔  SWIPE HERE',
+      { fontSize: '16px', color: `#${SWIPE_ZONE_COLOR.toString(16)}` },
+    ).setOrigin(0.5);
 
     // Invisible static physics walls that align with the room border
     const wallThickness = 20;
@@ -73,15 +97,24 @@ export default class GameScene extends Phaser.Scene {
     // Keyboard cursor keys
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    // Touch / swipe state
+    // Touch / swipe state — only initiated from within the room or swipe zone
     this.touchStartX = null;
     this.touchDeltaX = 0;
 
-    this.input.on('pointerdown', (pointer) => {
+    // Interactive zones that accept pointer-down to start a swipe
+    const roomZone = this.add.zone(roomX + roomSize / 2, roomY + roomSize / 2, roomSize, roomSize).setInteractive();
+    const swipeInputZone = this.add.zone(roomX + roomSize / 2, swipeZoneY + swipeZoneHeight / 2, roomSize, swipeZoneHeight).setInteractive();
+
+    const onPointerDown = (pointer) => {
       this.touchStartX = pointer.x;
       this.touchDeltaX = 0;
-    });
+    };
 
+    roomZone.on('pointerdown', onPointerDown);
+    swipeInputZone.on('pointerdown', onPointerDown);
+
+    // Track the ongoing drag and release globally so the gesture is not
+    // interrupted if the pointer moves outside the originating zone.
     this.input.on('pointermove', (pointer) => {
       if (!pointer.isDown || this.touchStartX === null) return;
       this.touchDeltaX = pointer.x - this.touchStartX;
