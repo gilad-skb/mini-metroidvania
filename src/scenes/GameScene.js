@@ -37,6 +37,7 @@ export default class GameScene extends Phaser.Scene {
 
   create() {
     const { width: sw, height: sh } = this.scale;
+    const controlStripHeight = 80;
 
     // Dark space outside the cross arms
     this.cameras.main.setBackgroundColor('#1a1a2e');
@@ -146,11 +147,13 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // ── Camera ────────────────────────────────────────────────────────────────
+    // Restrict the camera viewport so it occupies only the area above the
+    // control strip, preventing the buttons from overlapping the game view.
+    this.cameras.main.setViewport(0, 0, sw, sh - controlStripHeight);
     this.cameras.main.setBounds(0, 0, WORLD_SIZE, WORLD_SIZE);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
     // ── Control strip (screen-space UI, pinned to the viewport) ───────────────
-    const controlStripHeight = 80;
     const controlStripY = sh - controlStripHeight;
     const dirBtnWidth = (sw - JUMP_BTN_WIDTH) / 2;
 
