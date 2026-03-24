@@ -73,9 +73,11 @@ export default class GameScene extends Phaser.Scene {
     // height ≈ 240 px) can reach every one from the platform below it.
     const platformHeight = 16;
     const platformDefs = [
-      // Bottom arm — two steps up from the world-bounds floor
+      // Bottom arm — three steps up from the world-bounds floor
       { x: CORNER + 60, y: WORLD_SIZE - 220, w: (ARM_T - 120) / 2 },
       { x: CORNER + 60, y: WORLD_SIZE - 440, w: (ARM_T - 120) / 2 },
+      // Bridging step — spans the otherwise-unjumpable gap to the junction
+      { x: CORNER + 60, y: CORNER + ARM_T + 90, w: (ARM_T - 120) / 2 },
       // Lower vertical arm / centre junction
       { x: CORNER + 60, y: CORNER + ARM_T - 80, w: (ARM_T - 120) / 2 },
       // Centre cross area
