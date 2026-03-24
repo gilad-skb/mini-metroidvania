@@ -79,11 +79,12 @@ Displays the game title and a blinking "Press ENTER or Tap to Start" prompt. Sta
 ### GameScene
 The sole gameplay scene. Key responsibilities:
 
-1. **Layout** — Calculates a responsive square room that fits the screen with configurable padding and a control strip below it.
-2. **Drawing** — Renders the room outline, a mid-air platform, the player circle, and three control buttons using Phaser graphics.
-3. **Physics** — Creates four invisible static walls (floor, ceiling, left, right), a static platform, and a dynamic circular player body; registers colliders.
-4. **Input** — Handles both keyboard arrows and on-screen touch buttons.
-5. **Update loop** — Applies horizontal velocity and handles jump each frame.
+1. **World** — A 2000 × 2000 pixel cross/plus-sign shaped room, larger than the 800 × 600 viewport.
+2. **Drawing** — Renders the cross outline and fill (world space), several mid-air platforms, and three control buttons (screen space) using Phaser graphics.
+3. **Physics** — Four large static corner bodies block the cut-out regions of the cross; `setCollideWorldBounds(true)` handles the outer arm ends; static platforms and a dynamic circular player body; registers all colliders.
+4. **Camera** — Main camera follows the player with smooth lerp (0.1) and is clamped to the world bounds.
+5. **Input** — Handles both keyboard arrows and on-screen touch buttons (pinned to the viewport via `setScrollFactor(0)`).
+6. **Update loop** — Applies horizontal velocity and handles jump each frame.
 
 ---
 
@@ -95,22 +96,18 @@ The sole gameplay scene. Key responsibilities:
 | `JUMP_VELOCITY` | `-380` | Upward velocity applied on jump |
 | `JUMP_BTN_WIDTH` | `60` | Width of the jump button (px) |
 | `BTN_COLOR` | `0xaa88ff` | Purple colour for button borders and labels |
+| `WORLD_SIZE` | `2000` | Side length (px) of the square bounding box of the cross world |
+| `ARM_T` | `600` | Pixel thickness of each arm of the cross |
+| `CORNER` | `700` | Size of each square corner cut-out: `(WORLD_SIZE − ARM_T) / 2` |
 
 Layout variables (defined inside `create()`):
 
 | Variable | Value | Meaning |
 |---|---|---|
-| `topPadding` | `20` | Space above room |
-| `sidePadding` | `40` | Space on each side of room |
-| `controlStripHeight` | `80` | Height of button strip below room |
-| `controlStripGap` | `15` | Gap between room bottom and button strip |
-| `bottomPadding` | `20` | Space below button strip |
-| `wallThickness` | `20` | Thickness of invisible physics walls |
-| `playerRadius` | `18` | Radius of player circle |
-| `platformHeight` | `16` | Height of the mid-air platform |
-| `platformWidth` | `roomSize * 0.4` | Width of the mid-air platform (40% of room) |
-| `platformX` | `roomX + (roomSize - platformWidth) / 2` | Left edge of platform (centred horizontally) |
-| `platformY` | `roomY + roomSize * 0.55` | Top edge of platform (55% down from room top) |
+| `controlStripHeight` | `80` | Height of the on-screen button strip (px) |
+| `controlStripY` | `sh − 80` | Top Y of the button strip in screen space |
+| `platformHeight` | `16` | Height of each mid-air platform |
+| `playerRadius` | `18` | Radius of the player circle |
 
 ---
 
@@ -120,12 +117,14 @@ Layout variables (defined inside `create()`):
 - **Left / Right arrow keys** — horizontal movement
 - **Up arrow key** — jump (only when grounded)
 
-### On-screen touch buttons (control strip below room)
-The strip is divided into three buttons:
+### On-screen touch buttons (control strip — screen-space, pinned to viewport)
+The strip is drawn with `setScrollFactor(0)` and spans the full viewport width at the bottom of the screen:
 
 ```
 [ ▲ Jump (60px) ][ ◀ Left (dynamic) ][ ▶ Right (dynamic) ]
 ```
+
+The interactive zones also use `setScrollFactor(0)` so pointer hit-testing works in screen coordinates regardless of camera scroll.
 
 Each button uses `pointerdown` / `pointerup` / `pointerout` to set a boolean state on the scene:
 - `this.jumpPressed`
@@ -158,14 +157,14 @@ All physics bodies in GameScene:
 
 | Body | Type | Notes |
 |---|---|---|
-| Floor | Static | Centred at bottom of room, wider than room |
-| Ceiling | Static | Centred at top of room, wider than room |
-| Left wall | Static | Left edge of room |
-| Right wall | Static | Right edge of room |
-| Platform | Static | Horizontally centred, 55% down from room top; reachable by jumping |
-| Player | Dynamic, circular | 18 px radius; collides with all four walls and the platform |
+| Top-left corner | Static | Fills the `CORNER × CORNER` cut-out at world (0, 0) |
+| Top-right corner | Static | Fills the cut-out at world (`CORNER + ARM_T`, 0) |
+| Bottom-left corner | Static | Fills the cut-out at world (0, `CORNER + ARM_T`) |
+| Bottom-right corner | Static | Fills the cut-out at world (`CORNER + ARM_T`, `CORNER + ARM_T`) |
+| Platforms (×8) | Static | Distributed across all four arms and centre; each 16 px tall |
+| Player | Dynamic, circular | 18 px radius; `setCollideWorldBounds(true)` handles outer arm ends; collides with corner bodies and platforms |
 
-`player.body.blocked.down` is `true` when the player is resting on the floor — used to gate jumping.
+`player.body.blocked.down` is `true` when the player is resting on a surface — used to gate jumping.
 
 ---
 
