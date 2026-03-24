@@ -73,20 +73,22 @@ export default class GameScene extends Phaser.Scene {
     // height ≈ 240 px) can reach every one from the platform below it.
     const platformHeight = 16;
     const platformDefs = [
-      // Bottom arm — two steps up from the world-bounds floor
-      { x: CORNER + 60, y: WORLD_SIZE - 220, w: ARM_T - 120 },
-      { x: CORNER + 60, y: WORLD_SIZE - 440, w: ARM_T - 120 },
+      // Bottom arm — three steps up from the world-bounds floor
+      { x: CORNER + 60, y: WORLD_SIZE - 220, w: (ARM_T - 120) / 2 },
+      { x: CORNER + 60, y: WORLD_SIZE - 440, w: (ARM_T - 120) / 2 },
+      // Bridging step — spans the otherwise-unjumpable gap to the junction
+      { x: CORNER + 60, y: CORNER + ARM_T + 90, w: (ARM_T - 120) / 2 },
       // Lower vertical arm / centre junction
-      { x: CORNER + 60, y: CORNER + ARM_T - 80, w: ARM_T - 120 },
+      { x: CORNER + 60, y: CORNER + ARM_T - 80, w: (ARM_T - 120) / 2 },
       // Centre cross area
-      { x: CORNER + 60, y: CORNER + ARM_T - 300, w: ARM_T - 120 },
+      { x: CORNER + 60, y: CORNER + ARM_T - 300, w: (ARM_T - 120) / 2 },
       // Left arm
-      { x: 60, y: CORNER + 180, w: ARM_T - 160 },
+      { x: 60, y: CORNER + 180, w: (ARM_T - 160) / 2 },
       // Right arm
-      { x: CORNER + ARM_T + 60, y: CORNER + ARM_T - 200, w: ARM_T - 160 },
+      { x: CORNER + ARM_T + 60, y: CORNER + ARM_T - 200, w: (ARM_T - 160) / 2 },
       // Top arm — two steps up from the centre
-      { x: CORNER + 60, y: CORNER - 200, w: ARM_T - 120 },
-      { x: CORNER + 60, y: CORNER - 430, w: ARM_T - 120 },
+      { x: CORNER + 60, y: CORNER - 200, w: (ARM_T - 120) / 2 },
+      { x: CORNER + 60, y: CORNER - 430, w: (ARM_T - 120) / 2 },
     ];
 
     platformDefs.forEach(({ x, y, w }) => {
