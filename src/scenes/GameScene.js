@@ -6,19 +6,16 @@ const PLAYER_SPEED = 200;
 /** Initial vertical velocity applied when jumping (negative = upward). */
 const JUMP_VELOCITY = -380;
 
-/** Minimum horizontal pointer travel (px) before a swipe is recognised. */
-const SWIPE_THRESHOLD = 15;
-
-/** Width of the jump button that sits on the left edge of the swipe zone. */
+/** Width of the jump button that sits on the left edge of the control strip. */
 const JUMP_BTN_WIDTH = 60;
 
-/** Colour used for the swipe-zone border and label (purple). */
-const SWIPE_ZONE_COLOR = 0xaa88ff;
+/** Colour used for the control-button borders and labels (purple). */
+const BTN_COLOR = 0xaa88ff;
 
 /**
  * GameScene — the main gameplay scene.
  * Renders a square room with a circle player that can be moved
- * using arrow keys (left / right / up to jump) or touch swipe gestures.
+ * using arrow keys (left / right / up to jump) or on-screen buttons.
  */
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -30,15 +27,15 @@ export default class GameScene extends Phaser.Scene {
 
     this.cameras.main.setBackgroundColor('#1a1a2e');
 
-    // Square room — top-aligned, leaving space below for the swipe zone
+    // Square room — top-aligned, leaving space below for the control buttons
     const topPadding = 20;
     const sidePadding = 40;
-    const swipeZoneHeight = 80;
-    const swipeZoneGap = 15;
+    const controlStripHeight = 80;
+    const controlStripGap = 15;
     const bottomPadding = 20;
 
     const maxRoomWidth = width - sidePadding * 2;
-    const maxRoomHeight = height - topPadding - swipeZoneGap - swipeZoneHeight - bottomPadding;
+    const maxRoomHeight = height - topPadding - controlStripGap - controlStripHeight - bottomPadding;
     const roomSize = Math.min(maxRoomWidth, maxRoomHeight);
     const roomX = (width - roomSize) / 2;
     const roomY = topPadding;
@@ -48,36 +45,49 @@ export default class GameScene extends Phaser.Scene {
     graphics.lineStyle(4, 0x44aaff, 1);
     graphics.strokeRect(roomX, roomY, roomSize, roomSize);
 
-    // Swipe zone — coloured rectangle below the room, shifted right to make
-    // space for the jump button on the left
-    const swipeZoneY = roomY + roomSize + swipeZoneGap;
-    const swipeWidth = roomSize - JUMP_BTN_WIDTH;
-    const swipeStartX = roomX + JUMP_BTN_WIDTH;
+    // Control strip below the room: [Jump ▲] [◀ Left] [▶ Right]
+    const controlStripY = roomY + roomSize + controlStripGap;
+    const dirBtnWidth = (roomSize - JUMP_BTN_WIDTH) / 2;
 
-    // Jump button — small rectangle on the left edge of the swipe area
+    // Jump button — left-most button in the strip
     graphics.fillStyle(0x1a3a4e, 0.9);
-    graphics.fillRect(roomX, swipeZoneY, JUMP_BTN_WIDTH, swipeZoneHeight);
-    graphics.lineStyle(2, SWIPE_ZONE_COLOR, 1);
-    graphics.strokeRect(roomX, swipeZoneY, JUMP_BTN_WIDTH, swipeZoneHeight);
+    graphics.fillRect(roomX, controlStripY, JUMP_BTN_WIDTH, controlStripHeight);
+    graphics.lineStyle(2, BTN_COLOR, 1);
+    graphics.strokeRect(roomX, controlStripY, JUMP_BTN_WIDTH, controlStripHeight);
 
     this.add.text(
       roomX + JUMP_BTN_WIDTH / 2,
-      swipeZoneY + swipeZoneHeight / 2,
+      controlStripY + controlStripHeight / 2,
       '▲',
-      { fontSize: '24px', color: `#${SWIPE_ZONE_COLOR.toString(16).padStart(6, '0')}` },
+      { fontSize: '24px', color: `#${BTN_COLOR.toString(16).padStart(6, '0')}` },
     ).setOrigin(0.5);
 
-    // Swipe zone — narrowed to sit beside the jump button
+    // Left button
+    const leftBtnX = roomX + JUMP_BTN_WIDTH;
     graphics.fillStyle(0x2a1a4e, 0.9);
-    graphics.fillRect(swipeStartX, swipeZoneY, swipeWidth, swipeZoneHeight);
-    graphics.lineStyle(2, SWIPE_ZONE_COLOR, 1);
-    graphics.strokeRect(swipeStartX, swipeZoneY, swipeWidth, swipeZoneHeight);
+    graphics.fillRect(leftBtnX, controlStripY, dirBtnWidth, controlStripHeight);
+    graphics.lineStyle(2, BTN_COLOR, 1);
+    graphics.strokeRect(leftBtnX, controlStripY, dirBtnWidth, controlStripHeight);
 
     this.add.text(
-      swipeStartX + swipeWidth / 2,
-      swipeZoneY + swipeZoneHeight / 2,
-      '↔  SWIPE HERE',
-      { fontSize: '16px', color: `#${SWIPE_ZONE_COLOR.toString(16).padStart(6, '0')}` },
+      leftBtnX + dirBtnWidth / 2,
+      controlStripY + controlStripHeight / 2,
+      '◀',
+      { fontSize: '24px', color: `#${BTN_COLOR.toString(16).padStart(6, '0')}` },
+    ).setOrigin(0.5);
+
+    // Right button
+    const rightBtnX = leftBtnX + dirBtnWidth;
+    graphics.fillStyle(0x2a1a4e, 0.9);
+    graphics.fillRect(rightBtnX, controlStripY, dirBtnWidth, controlStripHeight);
+    graphics.lineStyle(2, BTN_COLOR, 1);
+    graphics.strokeRect(rightBtnX, controlStripY, dirBtnWidth, controlStripHeight);
+
+    this.add.text(
+      rightBtnX + dirBtnWidth / 2,
+      controlStripY + controlStripHeight / 2,
+      '▶',
+      { fontSize: '24px', color: `#${BTN_COLOR.toString(16).padStart(6, '0')}` },
     ).setOrigin(0.5);
 
     // Invisible static physics walls that align with the room border
@@ -118,41 +128,28 @@ export default class GameScene extends Phaser.Scene {
     // Keyboard cursor keys
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    // Touch / swipe state — only initiated from within the room or swipe zone
-    this.touchStartX = null;
-    this.touchDeltaX = 0;
-    // Whether the on-screen jump button is currently held down
+    // On-screen button states
     this.jumpPressed = false;
-
-    // Interactive zones that accept pointer-down to start a swipe
-    const roomZone = this.add.zone(roomX + roomSize / 2, roomY + roomSize / 2, roomSize, roomSize).setInteractive();
-    const swipeInputZone = this.add.zone(swipeStartX + swipeWidth / 2, swipeZoneY + swipeZoneHeight / 2, swipeWidth, swipeZoneHeight).setInteractive();
+    this.leftPressed = false;
+    this.rightPressed = false;
 
     // Jump button interactive zone
-    const jumpBtnZone = this.add.zone(roomX + JUMP_BTN_WIDTH / 2, swipeZoneY + swipeZoneHeight / 2, JUMP_BTN_WIDTH, swipeZoneHeight).setInteractive();
+    const jumpBtnZone = this.add.zone(roomX + JUMP_BTN_WIDTH / 2, controlStripY + controlStripHeight / 2, JUMP_BTN_WIDTH, controlStripHeight).setInteractive();
     jumpBtnZone.on('pointerdown', () => { this.jumpPressed = true; });
     jumpBtnZone.on('pointerup', () => { this.jumpPressed = false; });
     jumpBtnZone.on('pointerout', () => { this.jumpPressed = false; });
 
-    const onPointerDown = (pointer) => {
-      this.touchStartX = pointer.x;
-      this.touchDeltaX = 0;
-    };
+    // Left button interactive zone
+    const leftBtnZone = this.add.zone(leftBtnX + dirBtnWidth / 2, controlStripY + controlStripHeight / 2, dirBtnWidth, controlStripHeight).setInteractive();
+    leftBtnZone.on('pointerdown', () => { this.leftPressed = true; });
+    leftBtnZone.on('pointerup', () => { this.leftPressed = false; });
+    leftBtnZone.on('pointerout', () => { this.leftPressed = false; });
 
-    roomZone.on('pointerdown', onPointerDown);
-    swipeInputZone.on('pointerdown', onPointerDown);
-
-    // Track the ongoing drag and release globally so the gesture is not
-    // interrupted if the pointer moves outside the originating zone.
-    this.input.on('pointermove', (pointer) => {
-      if (!pointer.isDown || this.touchStartX === null) return;
-      this.touchDeltaX = pointer.x - this.touchStartX;
-    });
-
-    this.input.on('pointerup', () => {
-      this.touchStartX = null;
-      this.touchDeltaX = 0;
-    });
+    // Right button interactive zone
+    const rightBtnZone = this.add.zone(rightBtnX + dirBtnWidth / 2, controlStripY + controlStripHeight / 2, dirBtnWidth, controlStripHeight).setInteractive();
+    rightBtnZone.on('pointerdown', () => { this.rightPressed = true; });
+    rightBtnZone.on('pointerup', () => { this.rightPressed = false; });
+    rightBtnZone.on('pointerout', () => { this.rightPressed = false; });
   }
 
   update() {
@@ -167,13 +164,11 @@ export default class GameScene extends Phaser.Scene {
       vx = PLAYER_SPEED;
     }
 
-    // Swipe/touch horizontal movement (overrides keyboard while gesture is active)
-    if (this.touchStartX !== null) {
-      if (this.touchDeltaX < -SWIPE_THRESHOLD) {
-        vx = -PLAYER_SPEED;
-      } else if (this.touchDeltaX > SWIPE_THRESHOLD) {
-        vx = PLAYER_SPEED;
-      }
+    // On-screen button horizontal movement
+    if (this.leftPressed) {
+      vx = -PLAYER_SPEED;
+    } else if (this.rightPressed) {
+      vx = PLAYER_SPEED;
     }
 
     this.player.body.setVelocityX(vx);
