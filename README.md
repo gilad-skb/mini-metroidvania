@@ -27,6 +27,8 @@ src/
 
 The game is automatically deployed to GitHub Pages on every push to `main` via the [Deploy workflow](.github/workflows/deploy.yml).
 
+**Live URL:** https://gilad-skb.github.io/mini-metroidvania/
+
 To enable GitHub Pages in your fork:
 1. Go to **Settings → Pages**
 2. Set **Source** to **GitHub Actions**
