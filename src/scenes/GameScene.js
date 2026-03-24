@@ -147,9 +147,6 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // ── Camera ────────────────────────────────────────────────────────────────
-    // Restrict the camera viewport so it occupies only the area above the
-    // control strip, preventing the buttons from overlapping the game view.
-    this.cameras.main.setViewport(0, 0, sw, sh - controlStripHeight);
     this.cameras.main.setBounds(0, 0, WORLD_SIZE, WORLD_SIZE);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
