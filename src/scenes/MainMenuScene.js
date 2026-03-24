@@ -23,7 +23,7 @@ export default class MainMenuScene extends Phaser.Scene {
 
     // Start button placeholder
     const startText = this.add
-      .text(width / 2, height / 2, 'Press ENTER to Start', {
+      .text(width / 2, height / 2, 'Press ENTER or Tap to Start', {
         fontSize: '24px',
         color: '#aaaaaa',
       })
@@ -41,6 +41,11 @@ export default class MainMenuScene extends Phaser.Scene {
 
     // Listen for ENTER key to start the game
     this.input.keyboard.once('keydown-ENTER', () => {
+      this.scene.start('GameScene');
+    });
+
+    // Tap / touch to start (mobile support)
+    this.input.once('pointerdown', () => {
       this.scene.start('GameScene');
     });
   }
