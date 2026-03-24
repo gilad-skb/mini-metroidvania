@@ -9,6 +9,9 @@ const JUMP_VELOCITY = -380;
 /** Minimum horizontal pointer travel (px) before a swipe is recognised. */
 const SWIPE_THRESHOLD = 15;
 
+/** Width of the jump button that sits on the left edge of the swipe zone. */
+const JUMP_BTN_WIDTH = 60;
+
 /** Colour used for the swipe-zone border and label (purple). */
 const SWIPE_ZONE_COLOR = 0xaa88ff;
 
@@ -45,18 +48,36 @@ export default class GameScene extends Phaser.Scene {
     graphics.lineStyle(4, 0x44aaff, 1);
     graphics.strokeRect(roomX, roomY, roomSize, roomSize);
 
-    // Swipe zone — coloured rectangle below the room
+    // Swipe zone — coloured rectangle below the room, shifted right to make
+    // space for the jump button on the left
     const swipeZoneY = roomY + roomSize + swipeZoneGap;
-    graphics.fillStyle(0x2a1a4e, 0.9);
-    graphics.fillRect(roomX, swipeZoneY, roomSize, swipeZoneHeight);
+    const swipeWidth = roomSize - JUMP_BTN_WIDTH;
+    const swipeStartX = roomX + JUMP_BTN_WIDTH;
+
+    // Jump button — small rectangle on the left edge of the swipe area
+    graphics.fillStyle(0x1a3a4e, 0.9);
+    graphics.fillRect(roomX, swipeZoneY, JUMP_BTN_WIDTH, swipeZoneHeight);
     graphics.lineStyle(2, SWIPE_ZONE_COLOR, 1);
-    graphics.strokeRect(roomX, swipeZoneY, roomSize, swipeZoneHeight);
+    graphics.strokeRect(roomX, swipeZoneY, JUMP_BTN_WIDTH, swipeZoneHeight);
 
     this.add.text(
-      roomX + roomSize / 2,
+      roomX + JUMP_BTN_WIDTH / 2,
+      swipeZoneY + swipeZoneHeight / 2,
+      '▲',
+      { fontSize: '24px', color: `#${SWIPE_ZONE_COLOR.toString(16).padStart(6, '0')}` },
+    ).setOrigin(0.5);
+
+    // Swipe zone — narrowed to sit beside the jump button
+    graphics.fillStyle(0x2a1a4e, 0.9);
+    graphics.fillRect(swipeStartX, swipeZoneY, swipeWidth, swipeZoneHeight);
+    graphics.lineStyle(2, SWIPE_ZONE_COLOR, 1);
+    graphics.strokeRect(swipeStartX, swipeZoneY, swipeWidth, swipeZoneHeight);
+
+    this.add.text(
+      swipeStartX + swipeWidth / 2,
       swipeZoneY + swipeZoneHeight / 2,
       '↔  SWIPE HERE',
-      { fontSize: '16px', color: `#${SWIPE_ZONE_COLOR.toString(16)}` },
+      { fontSize: '16px', color: `#${SWIPE_ZONE_COLOR.toString(16).padStart(6, '0')}` },
     ).setOrigin(0.5);
 
     // Invisible static physics walls that align with the room border
@@ -100,10 +121,18 @@ export default class GameScene extends Phaser.Scene {
     // Touch / swipe state — only initiated from within the room or swipe zone
     this.touchStartX = null;
     this.touchDeltaX = 0;
+    // Whether the on-screen jump button is currently held down
+    this.jumpPressed = false;
 
     // Interactive zones that accept pointer-down to start a swipe
     const roomZone = this.add.zone(roomX + roomSize / 2, roomY + roomSize / 2, roomSize, roomSize).setInteractive();
-    const swipeInputZone = this.add.zone(roomX + roomSize / 2, swipeZoneY + swipeZoneHeight / 2, roomSize, swipeZoneHeight).setInteractive();
+    const swipeInputZone = this.add.zone(swipeStartX + swipeWidth / 2, swipeZoneY + swipeZoneHeight / 2, swipeWidth, swipeZoneHeight).setInteractive();
+
+    // Jump button interactive zone
+    const jumpBtnZone = this.add.zone(roomX + JUMP_BTN_WIDTH / 2, swipeZoneY + swipeZoneHeight / 2, JUMP_BTN_WIDTH, swipeZoneHeight).setInteractive();
+    jumpBtnZone.on('pointerdown', () => { this.jumpPressed = true; });
+    jumpBtnZone.on('pointerup', () => { this.jumpPressed = false; });
+    jumpBtnZone.on('pointerout', () => { this.jumpPressed = false; });
 
     const onPointerDown = (pointer) => {
       this.touchStartX = pointer.x;
@@ -149,8 +178,8 @@ export default class GameScene extends Phaser.Scene {
 
     this.player.body.setVelocityX(vx);
 
-    // Up-arrow jump (only when standing on a surface)
-    if (this.cursors.up.isDown && this.player.body.blocked.down) {
+    // Up-arrow jump or jump button (only when standing on a surface)
+    if ((this.cursors.up.isDown || this.jumpPressed) && this.player.body.blocked.down) {
       this.player.body.setVelocityY(JUMP_VELOCITY);
     }
   }
