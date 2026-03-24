@@ -125,6 +125,10 @@ export default class GameScene extends Phaser.Scene {
       this.physics.add.collider(this.player, wall);
     });
 
+    // Support up to 3 simultaneous touches so directional and jump buttons
+    // can be held at the same time.
+    this.input.addPointer(2);
+
     // Keyboard cursor keys
     this.cursors = this.input.keyboard.createCursorKeys();
 

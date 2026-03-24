@@ -183,3 +183,4 @@ All physics bodies in GameScene:
 - **No linter** — code style is kept consistent manually; follow the style of the surrounding file.
 - **Adding new scenes** — import the class in `src/main.js` and append it to the `scene` array in the Phaser config.
 - **Adding assets** — place files in `/public/assets/` and load them in `PreloadScene.preload()` using `this.load.*` calls.
+- **Updating these instructions** — after finishing any set of changes, review this file and update it if the changes introduce, remove, or alter anything documented here (new constants, new scenes, changed controls, new conventions, etc.). Only update what is actually affected; do not rewrite unrelated sections.
