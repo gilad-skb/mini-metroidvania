@@ -80,8 +80,8 @@ Displays the game title and a blinking "Press ENTER or Tap to Start" prompt. Sta
 The sole gameplay scene. Key responsibilities:
 
 1. **Layout** — Calculates a responsive square room that fits the screen with configurable padding and a control strip below it.
-2. **Drawing** — Renders the room outline, the player circle, and three control buttons using Phaser graphics.
-3. **Physics** — Creates four invisible static walls (floor, ceiling, left, right) and a dynamic circular player body; registers colliders.
+2. **Drawing** — Renders the room outline, a mid-air platform, the player circle, and three control buttons using Phaser graphics.
+3. **Physics** — Creates four invisible static walls (floor, ceiling, left, right), a static platform, and a dynamic circular player body; registers colliders.
 4. **Input** — Handles both keyboard arrows and on-screen touch buttons.
 5. **Update loop** — Applies horizontal velocity and handles jump each frame.
 
@@ -107,6 +107,10 @@ Layout variables (defined inside `create()`):
 | `bottomPadding` | `20` | Space below button strip |
 | `wallThickness` | `20` | Thickness of invisible physics walls |
 | `playerRadius` | `18` | Radius of player circle |
+| `platformHeight` | `16` | Height of the mid-air platform |
+| `platformWidth` | `roomSize * 0.4` | Width of the mid-air platform (40% of room) |
+| `platformX` | `roomX + (roomSize - platformWidth) / 2` | Left edge of platform (centred horizontally) |
+| `platformY` | `roomY + roomSize * 0.55` | Top edge of platform (55% down from room top) |
 
 ---
 
@@ -158,7 +162,8 @@ All physics bodies in GameScene:
 | Ceiling | Static | Centred at top of room, wider than room |
 | Left wall | Static | Left edge of room |
 | Right wall | Static | Right edge of room |
-| Player | Dynamic, circular | 18 px radius; collides with all four walls |
+| Platform | Static | Horizontally centred, 55% down from room top; reachable by jumping |
+| Player | Dynamic, circular | 18 px radius; collides with all four walls and the platform |
 
 `player.body.blocked.down` is `true` when the player is resting on the floor — used to gate jumping.
 

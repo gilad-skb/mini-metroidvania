@@ -40,10 +40,22 @@ export default class GameScene extends Phaser.Scene {
     const roomX = (width - roomSize) / 2;
     const roomY = topPadding;
 
+    // Mid-air platform — horizontally centred, reachable by jumping
+    const platformHeight = 16;
+    const platformWidth = Math.floor(roomSize * 0.4);
+    const platformX = roomX + Math.floor((roomSize - platformWidth) / 2);
+    const platformY = roomY + Math.floor(roomSize * 0.55);
+
     // Draw visible room outline
     const graphics = this.add.graphics();
     graphics.lineStyle(4, 0x44aaff, 1);
     graphics.strokeRect(roomX, roomY, roomSize, roomSize);
+
+    // Draw the platform
+    graphics.fillStyle(0x44aaff, 0.25);
+    graphics.fillRect(platformX, platformY, platformWidth, platformHeight);
+    graphics.lineStyle(2, 0x44aaff, 1);
+    graphics.strokeRect(platformX, platformY, platformWidth, platformHeight);
 
     // Control strip below the room: [Jump ▲] [◀ Left] [▶ Right]
     const controlStripY = roomY + roomSize + controlStripGap;
@@ -107,6 +119,17 @@ export default class GameScene extends Phaser.Scene {
       this.physics.add.existing(wall, true);
       this.walls.push(wall);
     });
+
+    // Static platform — invisible rectangle used as a physics collider,
+    // aligned with the drawn rectangle above.
+    const platformObject = this.add.rectangle(
+      platformX + platformWidth / 2,
+      platformY + platformHeight / 2,
+      platformWidth,
+      platformHeight,
+    );
+    this.physics.add.existing(platformObject, true);
+    this.walls.push(platformObject);
 
     // Player — white circle, spawns at the bottom-centre of the room
     const playerRadius = 18;
