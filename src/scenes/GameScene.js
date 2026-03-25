@@ -4,7 +4,13 @@ import Phaser from 'phaser';
 const PLAYER_SPEED = 200;
 
 /** Initial vertical velocity applied when jumping (negative = upward). */
-const JUMP_VELOCITY = -380;
+const JUMP_VELOCITY = -400;
+
+/** Extra upward acceleration applied while jump is held shortly after takeoff. */
+const JUMP_HOLD_ACCEL = 1200;
+
+/** Maximum time in ms that holding jump continues to boost upward movement. */
+const JUMP_HOLD_TIME = 200;
 
 /** Width of the jump button that sits on the left edge of the control strip. */
 const JUMP_BTN_WIDTH = 60;
@@ -33,6 +39,28 @@ const CORNER = (WORLD_SIZE - ARM_T) / 2; // 700
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameScene' });
+  }
+
+  setControlStripVisible(isVisible) {
+    this.controlStripVisible = isVisible;
+
+    if (!isVisible) {
+      this.jumpPressed = false;
+      this.leftPressed = false;
+      this.rightPressed = false;
+    }
+
+    this.controlStripElements.forEach((element) => {
+      element.setVisible(isVisible);
+    });
+
+    this.controlStripZones.forEach((zone) => {
+      if (isVisible) {
+        zone.setInteractive();
+      } else {
+        zone.disableInteractive();
+      }
+    });
   }
 
   create() {
@@ -162,7 +190,7 @@ export default class GameScene extends Phaser.Scene {
     uiGraphics.lineStyle(2, BTN_COLOR, 1);
     uiGraphics.strokeRect(0, controlStripY, JUMP_BTN_WIDTH, controlStripHeight);
 
-    this.add.text(
+    const jumpLabel = this.add.text(
       JUMP_BTN_WIDTH / 2,
       controlStripY + controlStripHeight / 2,
       '▲',
@@ -176,7 +204,7 @@ export default class GameScene extends Phaser.Scene {
     uiGraphics.lineStyle(2, BTN_COLOR, 1);
     uiGraphics.strokeRect(leftBtnX, controlStripY, dirBtnWidth, controlStripHeight);
 
-    this.add.text(
+    const leftLabel = this.add.text(
       leftBtnX + dirBtnWidth / 2,
       controlStripY + controlStripHeight / 2,
       '◀',
@@ -190,7 +218,7 @@ export default class GameScene extends Phaser.Scene {
     uiGraphics.lineStyle(2, BTN_COLOR, 1);
     uiGraphics.strokeRect(rightBtnX, controlStripY, dirBtnWidth, controlStripHeight);
 
-    this.add.text(
+    const rightLabel = this.add.text(
       rightBtnX + dirBtnWidth / 2,
       controlStripY + controlStripHeight / 2,
       '▶',
@@ -207,6 +235,10 @@ export default class GameScene extends Phaser.Scene {
     this.jumpPressed = false;
     this.leftPressed = false;
     this.rightPressed = false;
+    this.jumpHeld = false;
+    this.jumpHoldTimer = 0;
+    this.wasJumpDown = false;
+    this.controlStripVisible = true;
 
     // Interactive zones are in screen space (scrollFactor 0) so their x/y
     // are viewport coordinates and pointer hit-testing works correctly.
@@ -214,9 +246,12 @@ export default class GameScene extends Phaser.Scene {
       .zone(JUMP_BTN_WIDTH / 2, controlStripY + controlStripHeight / 2, JUMP_BTN_WIDTH, controlStripHeight)
       .setScrollFactor(0)
       .setInteractive();
-    jumpBtnZone.on('pointerdown', () => { this.jumpPressed = true; });
-    jumpBtnZone.on('pointerup',   () => { this.jumpPressed = false; });
-    jumpBtnZone.on('pointerout',  () => { this.jumpPressed = false; });
+    jumpBtnZone.on('pointerdown', () => {
+      this.jumpPressed = true;
+      this.jumpHeld = true;
+    });
+    jumpBtnZone.on('pointerup',   () => { this.jumpHeld = false; });
+    jumpBtnZone.on('pointerout',  () => { this.jumpHeld = false; });
 
     const leftBtnZone = this.add
       .zone(leftBtnX + dirBtnWidth / 2, controlStripY + controlStripHeight / 2, dirBtnWidth, controlStripHeight)
@@ -233,12 +268,25 @@ export default class GameScene extends Phaser.Scene {
     rightBtnZone.on('pointerdown', () => { this.rightPressed = true; });
     rightBtnZone.on('pointerup',   () => { this.rightPressed = false; });
     rightBtnZone.on('pointerout',  () => { this.rightPressed = false; });
+
+    this.controlStripElements = [uiGraphics, jumpLabel, leftLabel, rightLabel];
+    this.controlStripZones = [jumpBtnZone, leftBtnZone, rightBtnZone];
+
+    this.input.keyboard.on('keydown', () => {
+      this.setControlStripVisible(false);
+    });
+
+    this.input.on('pointerdown', () => {
+      this.setControlStripVisible(true);
+    });
   }
 
-  update() {
+  update(_, delta) {
     if (!this.player || !this.player.body) return;
 
     let vx = 0;
+    const jumpDown = this.cursors.up.isDown || this.jumpHeld;
+    const jumpJustPressed = jumpDown && !this.wasJumpDown;
 
     // Arrow-key horizontal movement
     if (this.cursors.left.isDown) {
@@ -256,9 +304,28 @@ export default class GameScene extends Phaser.Scene {
 
     this.player.body.setVelocityX(vx);
 
-    // Up-arrow jump or jump button (only when standing on a surface)
-    if ((this.cursors.up.isDown || this.jumpPressed) && this.player.body.blocked.down) {
-      this.player.body.setVelocityY(JUMP_VELOCITY);
+    if (this.player.body.blocked.down && !jumpDown) {
+      this.jumpHoldTimer = 0;
     }
+
+    // Start a jump on the press edge so holding the button doesn't retrigger it.
+    if (jumpJustPressed && this.player.body.blocked.down) {
+      this.player.body.setVelocityY(JUMP_VELOCITY);
+      this.jumpHoldTimer = JUMP_HOLD_TIME;
+    }
+
+    // Holding jump briefly after takeoff adds lift for a higher jump arc.
+    if (jumpDown && this.jumpHoldTimer > 0 && this.player.body.velocity.y < 0) {
+      this.player.body.setAccelerationY(-JUMP_HOLD_ACCEL);
+      this.jumpHoldTimer = Math.max(0, this.jumpHoldTimer - delta);
+    } else {
+      this.player.body.setAccelerationY(0);
+      if (!jumpDown) {
+        this.jumpHoldTimer = 0;
+      }
+    }
+
+    this.jumpPressed = false;
+    this.wasJumpDown = jumpDown;
   }
 }

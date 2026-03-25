@@ -93,7 +93,9 @@ The sole gameplay scene. Key responsibilities:
 | Constant | Value | Meaning |
 |---|---|---|
 | `PLAYER_SPEED` | `200` | Horizontal speed (px/s) |
-| `JUMP_VELOCITY` | `-380` | Upward velocity applied on jump |
+| `JUMP_VELOCITY` | `-700` | Initial upward velocity applied when jumping |
+| `JUMP_HOLD_ACCEL` | `1800` | Extra upward acceleration while jump is briefly held |
+| `JUMP_HOLD_TIME` | `140` | Maximum hold duration in ms for a higher jump |
 | `JUMP_BTN_WIDTH` | `60` | Width of the jump button (px) |
 | `BTN_COLOR` | `0xaa88ff` | Purple colour for button borders and labels |
 | `WORLD_SIZE` | `2000` | Side length (px) of the square bounding box of the cross world |
@@ -115,7 +117,8 @@ Layout variables (defined inside `create()`):
 
 ### Keyboard
 - **Left / Right arrow keys** — horizontal movement
-- **Up arrow key** — jump (only when grounded)
+- **Up arrow key** — jump; hold briefly after takeoff to jump higher
+- **Any keypress** — hides the on-screen control strip until the next pointer-down event
 
 ### On-screen touch buttons (control strip — screen-space, pinned to viewport)
 The strip is drawn with `setScrollFactor(0)` and spans the full viewport width at the bottom of the screen:
@@ -127,9 +130,11 @@ The strip is drawn with `setScrollFactor(0)` and spans the full viewport width a
 The interactive zones also use `setScrollFactor(0)` so pointer hit-testing works in screen coordinates regardless of camera scroll.
 
 Each button uses `pointerdown` / `pointerup` / `pointerout` to set a boolean state on the scene:
-- `this.jumpPressed`
+- `this.jumpHeld`
 - `this.leftPressed`
 - `this.rightPressed`
+
+Any pointer-down event shows the control strip again after it has been hidden by keyboard input.
 
 ### Movement logic (`update()`)
 ```javascript
@@ -143,9 +148,13 @@ else if (this.rightPressed) vx =  PLAYER_SPEED;
 
 player.body.setVelocityX(vx);
 
-// Jump — only when standing on a surface
-if ((cursors.up.isDown || this.jumpPressed) && player.body.blocked.down) {
+// Jump starts on press and gains extra height if held briefly after takeoff
+if (jumpJustPressed && player.body.blocked.down) {
   player.body.setVelocityY(JUMP_VELOCITY);
+}
+
+if (jumpDown && jumpHoldTimer > 0 && player.body.velocity.y < 0) {
+  player.body.setAccelerationY(-JUMP_HOLD_ACCEL);
 }
 ```
 
