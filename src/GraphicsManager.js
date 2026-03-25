@@ -70,7 +70,8 @@ export class GraphicsManager {
   createControlStrip() {
     const { width: sw, height: sh } = this.scene.scale;
     const controlStripY = sh - CONTROL_STRIP_HEIGHT;
-    const fixedBtnsWidth = JUMP_BTN_WIDTH + DASH_BTN_WIDTH;
+    // const fixedBtnsWidth = JUMP_BTN_WIDTH + DASH_BTN_WIDTH;
+    const fixedBtnsWidth = JUMP_BTN_WIDTH;
     const dirBtnWidth = (sw - fixedBtnsWidth) / 2;
 
     const uiGraphics = this.scene.add.graphics().setScrollFactor(0);
@@ -88,19 +89,19 @@ export class GraphicsManager {
       { fontSize: '24px', color: `#${BTN_COLOR.toString(16).padStart(6, '0')}` },
     ).setOrigin(0.5).setScrollFactor(0);
 
-    // Dash button background and border
-    const dashBtnX = JUMP_BTN_WIDTH;
-    uiGraphics.fillStyle(0x1a4e3a, 0.9);
-    uiGraphics.fillRect(dashBtnX, controlStripY, DASH_BTN_WIDTH, CONTROL_STRIP_HEIGHT);
-    uiGraphics.lineStyle(2, BTN_COLOR, 1);
-    uiGraphics.strokeRect(dashBtnX, controlStripY, DASH_BTN_WIDTH, CONTROL_STRIP_HEIGHT);
-
-    const dashLabel = this.scene.add.text(
-      dashBtnX + DASH_BTN_WIDTH / 2,
-      controlStripY + CONTROL_STRIP_HEIGHT / 2,
-      '»',
-      { fontSize: '24px', color: `#${BTN_COLOR.toString(16).padStart(6, '0')}` },
-    ).setOrigin(0.5).setScrollFactor(0);
+    // // Dash button background and border (hidden for now)
+    // const dashBtnX = JUMP_BTN_WIDTH;
+    // uiGraphics.fillStyle(0x1a4e3a, 0.9);
+    // uiGraphics.fillRect(dashBtnX, controlStripY, DASH_BTN_WIDTH, CONTROL_STRIP_HEIGHT);
+    // uiGraphics.lineStyle(2, BTN_COLOR, 1);
+    // uiGraphics.strokeRect(dashBtnX, controlStripY, DASH_BTN_WIDTH, CONTROL_STRIP_HEIGHT);
+    //
+    // const dashLabel = this.scene.add.text(
+    //   dashBtnX + DASH_BTN_WIDTH / 2,
+    //   controlStripY + CONTROL_STRIP_HEIGHT / 2,
+    //   '»',
+    //   { fontSize: '24px', color: `#${BTN_COLOR.toString(16).padStart(6, '0')}` },
+    // ).setOrigin(0.5).setScrollFactor(0);
 
     // Left button background and border
     const leftBtnX = fixedBtnsWidth;
@@ -132,10 +133,10 @@ export class GraphicsManager {
 
     return {
       uiGraphics,
-      labels: [jumpLabel, dashLabel, leftLabel, rightLabel],
+      labels: [jumpLabel, leftLabel, rightLabel],
       zones: [
         { x: JUMP_BTN_WIDTH / 2, y: controlStripY + CONTROL_STRIP_HEIGHT / 2, w: JUMP_BTN_WIDTH, h: CONTROL_STRIP_HEIGHT },
-        { x: dashBtnX + DASH_BTN_WIDTH / 2, y: controlStripY + CONTROL_STRIP_HEIGHT / 2, w: DASH_BTN_WIDTH, h: CONTROL_STRIP_HEIGHT },
+        // { x: dashBtnX + DASH_BTN_WIDTH / 2, y: controlStripY + CONTROL_STRIP_HEIGHT / 2, w: DASH_BTN_WIDTH, h: CONTROL_STRIP_HEIGHT },
         { x: leftBtnX + dirBtnWidth / 2, y: controlStripY + CONTROL_STRIP_HEIGHT / 2, w: dirBtnWidth, h: CONTROL_STRIP_HEIGHT },
         { x: rightBtnX + dirBtnWidth / 2, y: controlStripY + CONTROL_STRIP_HEIGHT / 2, w: dirBtnWidth, h: CONTROL_STRIP_HEIGHT },
       ],

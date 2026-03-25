@@ -15,6 +15,9 @@ export const CONTROL_STRIP_HEIGHT = 80;
 export const DASH_SPEED = 600;
 export const DASH_DURATION = 150;
 
+// Glide constants
+export const GLIDE_FALL_SPEED = 60;
+
 // World constants
 export const WORLD_SIZE = 2000;
 export const ARM_T = 600;
@@ -23,6 +26,7 @@ export const CORNER = (WORLD_SIZE - ARM_T) / 2; // 700
 // Powerup locations
 export const POWERUP_POSITIONS = [
   { x: CORNER + ARM_T + 60 + 50, y: CORNER + ARM_T - 200 - 60 }, // above right arm platform
+  { x: CORNER + ARM_T, y: CORNER + ARM_T },
 ];
 
 // Graphics constants

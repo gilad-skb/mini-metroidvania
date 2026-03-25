@@ -43,10 +43,16 @@ export default class GameScene extends Phaser.Scene {
     // Initialize powerup manager and create powerups
     this.powerupManager = new PowerupManager(this);
     this.powerupManager.createPowerups();
-    this.powerupManager.setupCollision(this.player, () => {
-      this.playerController.enableDoubleJump();
-      this.showPickupPrompt('found double jump!');
-    });
+    this.powerupManager.setupCollision(this.player, [
+      () => {
+        this.playerController.enableDoubleJump();
+        this.showPickupPrompt('found double jump!');
+      },
+      () => {
+        this.playerController.enableGlide();
+        this.showPickupPrompt('found glide!');
+      },
+    ]);
 
     // Set up camera
     this.cameras.main.setBounds(0, 0, WORLD_SIZE, WORLD_SIZE);

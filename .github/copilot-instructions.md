@@ -70,73 +70,6 @@ For the GitHub Pages build, set `GITHUB_PAGES=true` so Vite uses `/mini-metroidv
 
 ---
 
-## Scene descriptions
-
-### BootScene
-Runs first. Currently performs no setup and immediately calls `this.scene.start('PreloadScene')`.
-
-### PreloadScene
-Shows a progress bar (dark-gray background, blue fill) while loading assets. No real assets exist yet — there are TODO comments showing where `this.load.image()` / `this.load.tilemapTiledJSON()` calls should go. Calls `this.scene.start('MainMenuScene')` when done.
-
-### MainMenuScene
-Displays the game title and a blinking "Press ENTER or Tap to Start" prompt. Starts `GameScene` on ENTER keypress or any pointer-down event.
-
-### GameScene
-The sole gameplay scene. Orchestrates several manager modules to keep concerns separated:
-
-1. **PhysicsManager** — Creates and manages all physics bodies (corner walls, platforms, player body) and colliders.
-2. **GraphicsManager** — Handles all rendering: cross room interior/outline, platforms, and the control strip UI.
-3. **InputManager** — Manages keyboard and pointer input; maintains control strip state and visibility.
-4. **PlayerController** — Handles player movement logic (horizontal velocity, jumping, jump hold timer, double-jump).
-
-GameScene delegates to these modules in its `create()` and `update()` methods, keeping the scene class lean and focused on orchestration.
-
----
-
-## Module architecture
-
-### `constants.js`
-Exports all game constants used across GameScene and manager modules. Includes:
-- Player movement: `PLAYER_SPEED`, `JUMP_VELOCITY`, `JUMP_HOLD_ACCEL`, `JUMP_HOLD_TIME`, `MAX_JUMPS`
-- Dash: `DASH_SPEED`, `DASH_DURATION`
-- UI: `JUMP_BTN_WIDTH`, `DASH_BTN_WIDTH`, `BTN_COLOR`, `CONTROL_STRIP_HEIGHT`
-- World geometry: `WORLD_SIZE`, `ARM_T`, `CORNER`
-- Graphics: `PLATFORM_HEIGHT`, `PLAYER_RADIUS`
-
-### `PhysicsManager.js`
-Encapsulates all physics setup and collider creation:
-- **`setupPhysicsWorld()`** — Initializes world bounds and creates both corner walls and platforms.
-- **`createCornerWalls()`** — Creates the four static corner bodies that block cut-out regions.
-- **`createPlatforms()`** — Creates static colliders for all mid-air platforms.
-- **`createPlayerBody(x, y)`** — Creates the player physics body and registers all collisions.
-- **`getPlatformDefinitions()`** — Returns platform data for rendering.
-
-### `GraphicsManager.js`
-Handles all visual rendering:
-- **`setupBackground()`** — Sets the camera background color.
-- **`drawCrossRoom()`** — Draws the cross-shaped room fill and outline (world space).
-- **`drawPlatforms(platformDefs)`** — Draws all platform rectangles (world space).
-- **`createControlStrip()`** — Creates the control strip UI (jump, left, right buttons) with graphics and labels; returns UI elements and zone definitions for input binding.
-
-### `InputManager.js`
-Manages keyboard and touch input:
-- **`setupInput()`** — Initializes cursor keys and sets up keyboard/pointer event handlers.
-- **`setupControlStripZones(zoneDefinitions)`** — Creates interactive zones for the three control buttons.
-- **`setControlStripVisible(isVisible)`** — Toggles control strip visibility and enables/disables zone interactivity.
-- **`setControlStripElements(elements)`** — Stores references to UI graphics and labels for visibility toggling.
-- **`getInputState()`** — Returns the current input state (cursor keys, button flags, jump held).
-- **`clearJumpPressed()`** — Resets the jump pressed flag after each update.
-
-### `PlayerController.js`
-Manages player movement, jumping, dash, and state:
-- **`updateHorizontalMovement(inputState)`** — Applies horizontal velocity based on keyboard and on-screen button input; skipped while dashing.
-- **`updateJumpLogic(inputState, delta)`** — Handles jump initiation, double-jump, and jump-hold acceleration logic.
-- **`updateDashLogic(inputState, delta)`** — Initiates a dash in the held direction when `dashPressed` and a direction key is held; sustains dash velocity for `DASH_DURATION` ms.
-- **`update(inputState, delta)`** — Main update method: dash → horizontal movement → jump logic.
-- **`getState()`** — Returns the player's current state (jumps used, jump timer, airborne status).
-
----
-
 ## Controls
 
 ### Keyboard
@@ -149,31 +82,12 @@ Manages player movement, jumping, dash, and state:
 The strip is drawn with `setScrollFactor(0)` and spans the full viewport width at the bottom of the screen:
 
 ```
-[ ▲ Jump (100px) ][ » Dash (100px) ][ ◀ Left (dynamic) ][ ▶ Right (dynamic) ]
+[ ▲ Jump (100px) ][ ◀ Left (dynamic) ][ ▶ Right (dynamic) ]
 ```
 
-The interactive zones also use `setScrollFactor(0)` so pointer hit-testing works in screen coordinates regardless of camera scroll.
+The dash button (`»`) is currently commented out in `GraphicsManager.createControlStrip()`.
 
-Button state is managed by InputManager:
-- When a button is pressed, InputManager sets `this.jumpHeld`, `this.dashPressed`, `this.leftPressed`, or `this.rightPressed` to `true`.
-- When a button is released or pointer leaves the zone, these flags are set to `false` (dash resets each update via `clearDashPressed`).
-- Any pointer-down event shows the control strip again after it has been hidden by keyboard input.
-
-### Update-loop flow
-
-The `GameScene.update()` method now delegates to the manager modules:
-
-```javascript
-update(_, delta) {
-  const inputState = this.inputManager.getInputState();
-  this.playerController.update(inputState, delta);
-  this.inputManager.clearJumpPressed();
-}
-```
-
-The player movement and jumping logic is now handled entirely by `PlayerController`:
-1. **Horizontal movement** — Checks keyboard and button states from `InputManager`, applies velocity.
-2. **Jump logic** — Detects jump press edges, manages jump hold timer, applies acceleration for higher arcs, and handles double-jump counts.
+The interactive zones also use `setScrollFactor(0)` so pointer hit-testing works in screen coordinates regardless of camera scroll. Any pointer-down event shows the control strip again after it has been hidden by keyboard input.
 
 ---
 
@@ -213,4 +127,4 @@ All physics bodies in GameScene:
 - **No linter** — code style is kept consistent manually; follow the style of the surrounding file.
 - **Adding new scenes** — import the class in `src/main.js` and append it to the `scene` array in the Phaser config.
 - **Adding assets** — place files in `/public/assets/` and load them in `PreloadScene.preload()` using `this.load.*` calls.
-- **Updating these instructions** — after finishing any set of changes, review this file and update it if the changes introduce, remove, or alter anything documented here (new constants, new scenes, changed controls, new conventions, etc.). Only update what is actually affected; do not rewrite unrelated sections.
+- **Updating these instructions** — after finishing any set of changes, consider whether the changes are major and require to be documented in this instructions file. If so, update the relevant sections to keep them accurate and helpful for future reference.

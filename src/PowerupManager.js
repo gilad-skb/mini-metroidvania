@@ -7,7 +7,7 @@ export class PowerupManager {
   constructor(scene) {
     this.scene = scene;
     this.powerups = [];
-    this.onPowerupCollected = null;
+    this.callbacks = [];
   }
 
   /**
@@ -25,12 +25,12 @@ export class PowerupManager {
   /**
    * Set up collision detection between powerups and the player.
    */
-  setupCollision(player, onCollect) {
-    this.onPowerupCollected = onCollect;
-    this.powerups.forEach((powerup) => {
+  setupCollision(player, callbacks) {
+    this.callbacks = callbacks;
+    this.powerups.forEach((powerup, idx) => {
       // store the overlap collider so we can destroy it on collection
       const collider = this.scene.physics.add.overlap(player, powerup, () => {
-        this.collectPowerup(powerup, collider);
+        this.collectPowerup(powerup, collider, idx);
       });
     });
   }
@@ -38,16 +38,15 @@ export class PowerupManager {
   /**
    * Handle powerup collection: remove powerup and call callback.
    */
-  collectPowerup(powerup, collider) {
+  collectPowerup(powerup, collider, idx) {
     const index = this.powerups.indexOf(powerup);
     if (index > -1) {
-      console.debug('Double jump powerup collected!');
       this.powerups.splice(index, 1);
       // destroy the overlap first so the callback never fires again
       collider.destroy();
       powerup.destroy();
-      if (this.onPowerupCollected) {
-        this.onPowerupCollected();
+      if (this.callbacks[idx]) {
+        this.callbacks[idx]();
       }
     }
   }

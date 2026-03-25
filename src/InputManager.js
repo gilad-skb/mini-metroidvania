@@ -43,7 +43,7 @@ export class InputManager {
    * Takes an array of zone definitions from GraphicsManager.
    */
   setupControlStripZones(zoneDefinitions) {
-    const labels = ['jump', 'dash', 'left', 'right'];
+    const labels = ['jump', 'left', 'right'];
 
     zoneDefinitions.forEach((def, idx) => {
       const zone = this.scene.add
@@ -60,14 +60,11 @@ export class InputManager {
         zone.on('pointerup', () => { this.jumpHeld = false; });
         zone.on('pointerout', () => { this.jumpHeld = false; });
       } else if (idx === 1) {
-        // Dash button
-        zone.on('pointerdown', () => { this.dashPressed = true; });
-      } else if (idx === 2) {
         // Left button
         zone.on('pointerdown', () => { this.leftPressed = true; });
         zone.on('pointerup', () => { this.leftPressed = false; });
         zone.on('pointerout', () => { this.leftPressed = false; });
-      } else if (idx === 3) {
+      } else if (idx === 2) {
         // Right button
         zone.on('pointerdown', () => { this.rightPressed = true; });
         zone.on('pointerup', () => { this.rightPressed = false; });

@@ -1,4 +1,4 @@
-import { PLAYER_SPEED, JUMP_VELOCITY, JUMP_HOLD_ACCEL, JUMP_HOLD_TIME, MAX_JUMPS, DASH_SPEED, DASH_DURATION } from './constants.js';
+import { PLAYER_SPEED, JUMP_VELOCITY, JUMP_HOLD_ACCEL, JUMP_HOLD_TIME, MAX_JUMPS, DASH_SPEED, DASH_DURATION, GLIDE_FALL_SPEED } from './constants.js';
 
 /**
  * PlayerController — manages player movement, jumping, and related state.
@@ -13,6 +13,7 @@ export class PlayerController {
     this.maxJumpsAvailable = MAX_JUMPS;
     this.dashTimer = 0;
     this.dashDirection = 0;
+    this.glideEnabled = false;
   }
 
   /**
@@ -126,6 +127,23 @@ export class PlayerController {
     this.updateDashLogic(inputState, delta);
     this.updateHorizontalMovement(inputState);
     this.updateJumpLogic(inputState, delta);
+    this.updateGlideLogic(inputState);
+  }
+
+  /**
+   * Handle glide logic: when all jumps are spent, holding jump while falling
+   * caps the fall speed to GLIDE_FALL_SPEED for a slow descent.
+   */
+  updateGlideLogic(inputState) {
+    if (!this.glideEnabled) return;
+
+    const jumpDown = inputState.cursorKeys.up.isDown || inputState.jumpHeld;
+    const falling = this.player.body.velocity.y > 0;
+    const allJumpsSpent = this.jumpsUsed >= this.maxJumpsAvailable;
+
+    if (jumpDown && falling && allJumpsSpent) {
+      this.player.body.setVelocityY(GLIDE_FALL_SPEED);
+    }
   }
 
   /**
@@ -145,5 +163,13 @@ export class PlayerController {
   enableDoubleJump() {
     this.maxJumpsAvailable = 2;
     console.debug('Double jump enabled!');
+  }
+
+  /**
+   * Enable glide ability.
+   */
+  enableGlide() {
+    this.glideEnabled = true;
+    console.debug('Glide enabled!');
   }
 }
