@@ -95,8 +95,9 @@ export class PlayerController {
     }
 
     // Start a jump on the press edge (holding button doesn't retrigger it).
-    // Allow one extra jump while airborne for a double jump.
-    if (jumpJustPressed && this.jumpsUsed < this.maxJumpsAvailable) {
+    // the first jump (jumpsUsed === 0) requires being grounded at the moment of press;
+    // subsequent jumps (e.g. double jump) are allowed mid-air.
+    if (jumpJustPressed && this.jumpsUsed < this.maxJumpsAvailable && (this.jumpsUsed > 0 || grounded)) {
       console.debug('Jumped');
       this.player.body.setVelocityY(JUMP_VELOCITY);
       this.jumpHeldTimer = JUMP_HOLD_TIME;
