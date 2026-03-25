@@ -9,6 +9,7 @@ export class PlayerController {
     this.jumpHeldTimer = 0;
     this.wasJumpDown = false;
     this.jumpsUsed = 0;
+    this.wasGrounded = false;
   }
 
   /**
@@ -39,18 +40,18 @@ export class PlayerController {
    * Handle jump logic: jump initialization and air acceleration.
    */
   updateJumpLogic(inputState, delta) {
-    const { jumpHeld } = inputState;
-    const jumpDown = jumpHeld;
+    const jumpDown = inputState.cursorKeys.up.isDown || inputState.jumpHeld;
     const jumpJustPressed = jumpDown && !this.wasJumpDown;
+    const grounded = this.player.body.blocked.down;
 
-    // Reset jump counter when landing
-    if (this.player.body.blocked.down) {
+    // reset jump counter only on the landing transition (airborne → grounded)
+    if (grounded && !this.wasGrounded) {
       console.debug('Landed');
       this.jumpsUsed = 0;
     }
 
-    // Reset jump timer when grounded and not holding jump
-    if (this.player.body.blocked.down && !jumpDown) {
+    // reset jump timer when grounded and not holding jump
+    if (grounded && !jumpDown) {
       this.jumpHeldTimer = 0;
     }
 
@@ -75,6 +76,7 @@ export class PlayerController {
     }
 
     this.wasJumpDown = jumpDown;
+    this.wasGrounded = grounded;
   }
 
   /**
