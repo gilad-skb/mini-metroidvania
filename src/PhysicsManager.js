@@ -40,22 +40,22 @@ export class PhysicsManager {
    */
   createPlatforms() {
     const platformDefs = [
-      // Bottom arm — three steps up from the world-bounds floor
-      { x: CORNER + 60, y: WORLD_SIZE - 220, w: (ARM_T - 120) / 2 },
-      { x: CORNER + 60, y: WORLD_SIZE - 440, w: (ARM_T - 120) / 2 },
-      // Bridging step — spans the otherwise-unjumpable gap to the junction
-      { x: CORNER + 60, y: CORNER + ARM_T + 90, w: (ARM_T - 120) / 2 },
-      // Lower vertical arm / centre junction
-      { x: CORNER + 60, y: CORNER + ARM_T - 80, w: (ARM_T - 120) / 2 },
-      // Centre cross area
-      { x: CORNER + 60, y: CORNER + ARM_T - 300, w: (ARM_T - 120) / 2 },
-      // Left arm
-      { x: 60, y: CORNER + 180, w: (ARM_T - 160) / 2 },
-      // Right arm
-      { x: CORNER + ARM_T + 60, y: CORNER + ARM_T - 200, w: (ARM_T - 160) / 2 },
-      // Top arm — two steps up from the centre
-      { x: CORNER + 60, y: CORNER - 200, w: (ARM_T - 120) / 2 },
-      { x: CORNER + 60, y: CORNER - 430, w: (ARM_T - 120) / 2 },
+      // bottom arm — zigzag staircase up from the floor
+      { x: CORNER + 50,          y: WORLD_SIZE - 200,     w: 200 }, // left, near bottom
+      { x: CORNER + ARM_T - 280, y: WORLD_SIZE - 400,     w: 160 }, // right, step up
+      { x: CORNER + 80,          y: CORNER + ARM_T + 100, w: 240 }, // left, bridging
+      // centre/junction — offset to opposite sides
+      { x: CORNER + 40,          y: CORNER + ARM_T - 70,  w: 180 }, // left, lower
+      { x: CORNER + ARM_T - 260, y: CORNER + ARM_T - 310, w: 200 }, // right, upper
+      // left arm — two platforms at different depths
+      { x: 30,                   y: CORNER + ARM_T - 150, w: 180 }, // inner, low
+      { x: 270,                  y: CORNER + 120,         w: 160 }, // outer, high
+      // right arm — two platforms at different depths
+      { x: CORNER + ARM_T + 60,  y: CORNER + ARM_T - 130, w: 190 }, // inner, mid
+      { x: CORNER + ARM_T + 370, y: CORNER + 90,          w: 160 }, // outer, high
+      // top arm — staggered steps to the ceiling
+      { x: CORNER + ARM_T - 290, y: CORNER - 185,         w: 180 }, // right, lower
+      { x: CORNER + 60,          y: CORNER - 415,         w: 200 }, // left, upper
     ];
 
     platformDefs.forEach(({ x, y, w }) => {
@@ -86,15 +86,17 @@ export class PhysicsManager {
    */
   getPlatformDefinitions() {
     return [
-      { x: CORNER + 60, y: WORLD_SIZE - 220, w: (ARM_T - 120) / 2 },
-      { x: CORNER + 60, y: WORLD_SIZE - 440, w: (ARM_T - 120) / 2 },
-      { x: CORNER + 60, y: CORNER + ARM_T + 90, w: (ARM_T - 120) / 2 },
-      { x: CORNER + 60, y: CORNER + ARM_T - 80, w: (ARM_T - 120) / 2 },
-      { x: CORNER + 60, y: CORNER + ARM_T - 300, w: (ARM_T - 120) / 2 },
-      { x: 60, y: CORNER + 180, w: (ARM_T - 160) / 2 },
-      { x: CORNER + ARM_T + 60, y: CORNER + ARM_T - 200, w: (ARM_T - 160) / 2 },
-      { x: CORNER + 60, y: CORNER - 200, w: (ARM_T - 120) / 2 },
-      { x: CORNER + 60, y: CORNER - 430, w: (ARM_T - 120) / 2 },
+      { x: CORNER + 50,          y: WORLD_SIZE - 200,     w: 200 },
+      { x: CORNER + ARM_T - 280, y: WORLD_SIZE - 400,     w: 160 },
+      { x: CORNER + 80,          y: CORNER + ARM_T + 100, w: 240 },
+      { x: CORNER + 40,          y: CORNER + ARM_T - 70,  w: 180 },
+      { x: CORNER + ARM_T - 260, y: CORNER + ARM_T - 310, w: 200 },
+      { x: 30,                   y: CORNER + ARM_T - 150, w: 180 },
+      { x: 270,                  y: CORNER + 120,         w: 160 },
+      { x: CORNER + ARM_T + 60,  y: CORNER + ARM_T - 130, w: 190 },
+      { x: CORNER + ARM_T + 370, y: CORNER + 90,          w: 160 },
+      { x: CORNER + ARM_T - 290, y: CORNER - 185,         w: 180 },
+      { x: CORNER + 60,          y: CORNER - 415,         w: 200 },
     ];
   }
 }
