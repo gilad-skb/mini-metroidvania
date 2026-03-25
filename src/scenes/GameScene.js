@@ -70,6 +70,7 @@ export default class GameScene extends Phaser.Scene {
     const inputState = this.inputManager.getInputState();
     this.playerController.update(inputState, delta);
     this.inputManager.clearJumpPressed();
+    this.inputManager.clearDashPressed();
   }
 
   /**

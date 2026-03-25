@@ -7,8 +7,13 @@ export const MAX_JUMPS = 1;
 
 // UI constants
 export const JUMP_BTN_WIDTH = 100;
+export const DASH_BTN_WIDTH = 100;
 export const BTN_COLOR = 0xaa88ff;
 export const CONTROL_STRIP_HEIGHT = 80;
+
+// Dash constants
+export const DASH_SPEED = 600;
+export const DASH_DURATION = 150;
 
 // World constants
 export const WORLD_SIZE = 2000;

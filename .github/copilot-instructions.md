@@ -98,7 +98,8 @@ GameScene delegates to these modules in its `create()` and `update()` methods, k
 ### `constants.js`
 Exports all game constants used across GameScene and manager modules. Includes:
 - Player movement: `PLAYER_SPEED`, `JUMP_VELOCITY`, `JUMP_HOLD_ACCEL`, `JUMP_HOLD_TIME`, `MAX_JUMPS`
-- UI: `JUMP_BTN_WIDTH`, `BTN_COLOR`, `CONTROL_STRIP_HEIGHT`
+- Dash: `DASH_SPEED`, `DASH_DURATION`
+- UI: `JUMP_BTN_WIDTH`, `DASH_BTN_WIDTH`, `BTN_COLOR`, `CONTROL_STRIP_HEIGHT`
 - World geometry: `WORLD_SIZE`, `ARM_T`, `CORNER`
 - Graphics: `PLATFORM_HEIGHT`, `PLAYER_RADIUS`
 
@@ -127,10 +128,11 @@ Manages keyboard and touch input:
 - **`clearJumpPressed()`** — Resets the jump pressed flag after each update.
 
 ### `PlayerController.js`
-Manages player movement, jumping, and state:
-- **`updateHorizontalMovement(inputState)`** — Applies horizontal velocity based on keyboard and on-screen button input.
+Manages player movement, jumping, dash, and state:
+- **`updateHorizontalMovement(inputState)`** — Applies horizontal velocity based on keyboard and on-screen button input; skipped while dashing.
 - **`updateJumpLogic(inputState, delta)`** — Handles jump initiation, double-jump, and jump-hold acceleration logic.
-- **`update(inputState, delta)`** — Main update method combining movement and jump logic.
+- **`updateDashLogic(inputState, delta)`** — Initiates a dash in the held direction when `dashPressed` and a direction key is held; sustains dash velocity for `DASH_DURATION` ms.
+- **`update(inputState, delta)`** — Main update method: dash → horizontal movement → jump logic.
 - **`getState()`** — Returns the player's current state (jumps used, jump timer, airborne status).
 
 ---
@@ -140,20 +142,21 @@ Manages player movement, jumping, and state:
 ### Keyboard
 - **Left / Right arrow keys** — horizontal movement
 - **Up arrow key** — jump; hold briefly after takeoff to jump higher
+- **Space** — dash in the currently held direction; does nothing if no direction key is held
 - **Any keypress** — hides the on-screen control strip until the next pointer-down event
 
 ### On-screen touch buttons (control strip — screen-space, pinned to viewport)
 The strip is drawn with `setScrollFactor(0)` and spans the full viewport width at the bottom of the screen:
 
 ```
-[ ▲ Jump (60px) ][ ◀ Left (dynamic) ][ ▶ Right (dynamic) ]
+[ ▲ Jump (100px) ][ » Dash (100px) ][ ◀ Left (dynamic) ][ ▶ Right (dynamic) ]
 ```
 
 The interactive zones also use `setScrollFactor(0)` so pointer hit-testing works in screen coordinates regardless of camera scroll.
 
 Button state is managed by InputManager:
-- When a button is pressed, InputManager sets `this.jumpHeld`, `this.leftPressed`, or `this.rightPressed` to `true`.
-- When a button is released or pointer leaves the zone, these flags are set to `false`.
+- When a button is pressed, InputManager sets `this.jumpHeld`, `this.dashPressed`, `this.leftPressed`, or `this.rightPressed` to `true`.
+- When a button is released or pointer leaves the zone, these flags are set to `false` (dash resets each update via `clearDashPressed`).
 - Any pointer-down event shows the control strip again after it has been hidden by keyboard input.
 
 ### Update-loop flow

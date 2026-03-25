@@ -6,6 +6,7 @@ export class InputManager {
     this.scene = scene;
     this.cursors = null;
     this.jumpPressed = false;
+    this.dashPressed = false;
     this.leftPressed = false;
     this.rightPressed = false;
     this.jumpHeld = false;
@@ -22,9 +23,14 @@ export class InputManager {
     // can be held at the same time.
     this.scene.input.addPointer(2);
     this.cursors = this.scene.input.keyboard.createCursorKeys();
+    this.spaceKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     this.scene.input.keyboard.on('keydown', () => {
       this.setControlStripVisible(false);
+    });
+
+    this.scene.input.keyboard.on('keydown-SPACE', () => {
+      this.dashPressed = true;
     });
 
     this.scene.input.on('pointerdown', () => {
@@ -37,7 +43,7 @@ export class InputManager {
    * Takes an array of zone definitions from GraphicsManager.
    */
   setupControlStripZones(zoneDefinitions) {
-    const labels = ['jump', 'left', 'right'];
+    const labels = ['jump', 'dash', 'left', 'right'];
 
     zoneDefinitions.forEach((def, idx) => {
       const zone = this.scene.add
@@ -54,11 +60,14 @@ export class InputManager {
         zone.on('pointerup', () => { this.jumpHeld = false; });
         zone.on('pointerout', () => { this.jumpHeld = false; });
       } else if (idx === 1) {
+        // Dash button
+        zone.on('pointerdown', () => { this.dashPressed = true; });
+      } else if (idx === 2) {
         // Left button
         zone.on('pointerdown', () => { this.leftPressed = true; });
         zone.on('pointerup', () => { this.leftPressed = false; });
         zone.on('pointerout', () => { this.leftPressed = false; });
-      } else if (idx === 2) {
+      } else if (idx === 3) {
         // Right button
         zone.on('pointerdown', () => { this.rightPressed = true; });
         zone.on('pointerup', () => { this.rightPressed = false; });
@@ -77,6 +86,7 @@ export class InputManager {
 
     if (!isVisible) {
       this.jumpPressed = false;
+      this.dashPressed = false;
       this.leftPressed = false;
       this.rightPressed = false;
     }
@@ -108,6 +118,7 @@ export class InputManager {
     return {
       cursorKeys: this.cursors,
       jumpPressed: this.jumpPressed,
+      dashPressed: this.dashPressed,
       leftPressed: this.leftPressed,
       rightPressed: this.rightPressed,
       jumpHeld: this.jumpHeld,
@@ -119,5 +130,12 @@ export class InputManager {
    */
   clearJumpPressed() {
     this.jumpPressed = false;
+  }
+
+  /**
+   * Clear the dash pressed flag (called after each update).
+   */
+  clearDashPressed() {
+    this.dashPressed = false;
   }
 }
