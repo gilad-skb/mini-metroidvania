@@ -4,6 +4,7 @@ import { PhysicsManager } from '../PhysicsManager.js';
 import { GraphicsManager } from '../GraphicsManager.js';
 import { InputManager } from '../InputManager.js';
 import { PlayerController } from '../PlayerController.js';
+import { PowerupManager } from '../PowerupManager.js';
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -12,6 +13,7 @@ export default class GameScene extends Phaser.Scene {
     this.graphicsManager = null;
     this.inputManager = null;
     this.playerController = null;
+    this.powerupManager = null;
   }
 
   create() {
@@ -38,6 +40,14 @@ export default class GameScene extends Phaser.Scene {
     // Initialize player controller
     this.playerController = new PlayerController(this.player);
 
+    // Initialize powerup manager and create powerups
+    this.powerupManager = new PowerupManager(this);
+    this.powerupManager.createPowerups();
+    this.powerupManager.setupCollision(this.player, () => {
+      this.playerController.enableDoubleJump();
+      this.showPickupPrompt('found double jump!');
+    });
+
     // Set up camera
     this.cameras.main.setBounds(0, 0, WORLD_SIZE, WORLD_SIZE);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
@@ -60,5 +70,26 @@ export default class GameScene extends Phaser.Scene {
     const inputState = this.inputManager.getInputState();
     this.playerController.update(inputState, delta);
     this.inputManager.clearJumpPressed();
+  }
+
+  /**
+   * Show a centered screen-space prompt for 2 seconds, then fade it out.
+   */
+  showPickupPrompt(message) {
+    const { width: sw, height: sh } = this.scale;
+    const text = this.add.text(sw / 2, sh / 2, message, {
+      fontSize: '28px',
+      color: '#ffaa00',
+      stroke: '#000000',
+      strokeThickness: 4,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(10);
+
+    this.tweens.add({
+      targets: text,
+      alpha: 0,
+      delay: 1700,
+      duration: 300,
+      onComplete: () => text.destroy(),
+    });
   }
 }

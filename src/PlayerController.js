@@ -10,6 +10,7 @@ export class PlayerController {
     this.wasJumpDown = false;
     this.jumpsUsed = 0;
     this.wasGrounded = false;
+    this.maxJumpsAvailable = MAX_JUMPS;
   }
 
   /**
@@ -57,7 +58,7 @@ export class PlayerController {
 
     // Start a jump on the press edge (holding button doesn't retrigger it).
     // Allow one extra jump while airborne for a double jump.
-    if (jumpJustPressed && this.jumpsUsed < MAX_JUMPS) {
+    if (jumpJustPressed && this.jumpsUsed < this.maxJumpsAvailable) {
       console.debug('Jumped');
       this.player.body.setVelocityY(JUMP_VELOCITY);
       this.jumpHeldTimer = JUMP_HOLD_TIME;
@@ -98,5 +99,13 @@ export class PlayerController {
       jumpHeldTimer: this.jumpHeldTimer,
       isAirborne: !this.player.body.blocked.down,
     };
+  }
+
+  /**
+   * Enable double jump by increasing the max jumps available.
+   */
+  enableDoubleJump() {
+    this.maxJumpsAvailable = 2;
+    console.debug('Double jump enabled!');
   }
 }
