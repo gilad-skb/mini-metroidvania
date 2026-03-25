@@ -1,0 +1,100 @@
+import { PLAYER_SPEED, JUMP_VELOCITY, JUMP_HOLD_ACCEL, JUMP_HOLD_TIME, MAX_JUMPS } from './constants.js';
+
+/**
+ * PlayerController — manages player movement, jumping, and related state.
+ */
+export class PlayerController {
+  constructor(player) {
+    this.player = player;
+    this.jumpHeldTimer = 0;
+    this.wasJumpDown = false;
+    this.jumpsUsed = 0;
+  }
+
+  /**
+   * Update player horizontal velocity based on input state.
+   */
+  updateHorizontalMovement(inputState) {
+    let vx = 0;
+    const { cursorKeys, leftPressed, rightPressed } = inputState;
+
+    // Keyboard movement
+    if (cursorKeys.left.isDown) {
+      vx = -PLAYER_SPEED;
+    } else if (cursorKeys.right.isDown) {
+      vx = PLAYER_SPEED;
+    }
+
+    // On-screen button movement (overrides keyboard when active)
+    if (leftPressed) {
+      vx = -PLAYER_SPEED;
+    } else if (rightPressed) {
+      vx = PLAYER_SPEED;
+    }
+
+    this.player.body.setVelocityX(vx);
+  }
+
+  /**
+   * Handle jump logic: jump initialization and air acceleration.
+   */
+  updateJumpLogic(inputState, delta) {
+    const { jumpHeld } = inputState;
+    const jumpDown = jumpHeld;
+    const jumpJustPressed = jumpDown && !this.wasJumpDown;
+
+    // Reset jump counter when landing
+    if (this.player.body.blocked.down) {
+      console.debug('Landed');
+      this.jumpsUsed = 0;
+    }
+
+    // Reset jump timer when grounded and not holding jump
+    if (this.player.body.blocked.down && !jumpDown) {
+      this.jumpHeldTimer = 0;
+    }
+
+    // Start a jump on the press edge (holding button doesn't retrigger it).
+    // Allow one extra jump while airborne for a double jump.
+    if (jumpJustPressed && this.jumpsUsed < MAX_JUMPS) {
+      console.debug('Jumped');
+      this.player.body.setVelocityY(JUMP_VELOCITY);
+      this.jumpHeldTimer = JUMP_HOLD_TIME;
+      this.jumpsUsed += 1;
+    }
+
+    // Holding jump briefly after takeoff adds lift for a higher arc.
+    if (jumpDown && this.jumpHeldTimer > 0 && this.player.body.velocity.y < 0) {
+      this.player.body.setAccelerationY(-JUMP_HOLD_ACCEL);
+      this.jumpHeldTimer = Math.max(0, this.jumpHeldTimer - delta);
+    } else {
+      this.player.body.setAccelerationY(0);
+      if (!jumpDown) {
+        this.jumpHeldTimer = 0;
+      }
+    }
+
+    this.wasJumpDown = jumpDown;
+  }
+
+  /**
+   * Main update method combining horizontal and vertical movement logic.
+   */
+  update(inputState, delta) {
+    if (!this.player || !this.player.body) return;
+
+    this.updateHorizontalMovement(inputState);
+    this.updateJumpLogic(inputState, delta);
+  }
+
+  /**
+   * Get the current player state (for debugging or other systems).
+   */
+  getState() {
+    return {
+      jumpsUsed: this.jumpsUsed,
+      jumpHeldTimer: this.jumpHeldTimer,
+      isAirborne: !this.player.body.blocked.down,
+    };
+  }
+}

@@ -13,16 +13,21 @@ Live URL: <https://gilad-skb.github.io/mini-metroidvania/>
 ```
 .github/
   workflows/
-    deploy.yml          # CI: npm ci → vite build → deploy to GitHub Pages
+    deploy.yml              # CI: npm ci → vite build → deploy to GitHub Pages
 src/
-  main.js               # Phaser game config + entry point
+  main.js                   # Phaser game config + entry point
+  constants.js              # Game, world, physics, and UI constants
+  PhysicsManager.js         # Physics bodies, colliders, platforms
+  GraphicsManager.js        # Rendering: cross room, platforms, UI
+  InputManager.js           # Keyboard and touch input handling
+  PlayerController.js       # Player movement and jumping logic
   scenes/
-    BootScene.js        # First scene; sets global config then starts PreloadScene
-    PreloadScene.js     # Loading screen with progress bar; starts MainMenuScene
-    MainMenuScene.js    # Title screen; ENTER or tap starts GameScene
-    GameScene.js        # Main gameplay: room, player, physics, controls
-index.html              # Minimal HTML shell; disables default touch actions on canvas
-vite.config.js          # Sets base path to /mini-metroidvania/ when GITHUB_PAGES=true
+    BootScene.js            # First scene; sets global config then starts PreloadScene
+    PreloadScene.js         # Loading screen with progress bar; starts MainMenuScene
+    MainMenuScene.js        # Title screen; ENTER or tap starts GameScene
+    GameScene.js            # Main gameplay scene; orchestrates managers and controllers
+index.html                  # Minimal HTML shell; disables default touch actions on canvas
+vite.config.js              # Sets base path to /mini-metroidvania/ when GITHUB_PAGES=true
 package.json
 ```
 
@@ -77,39 +82,56 @@ Shows a progress bar (dark-gray background, blue fill) while loading assets. No 
 Displays the game title and a blinking "Press ENTER or Tap to Start" prompt. Starts `GameScene` on ENTER keypress or any pointer-down event.
 
 ### GameScene
-The sole gameplay scene. Key responsibilities:
+The sole gameplay scene. Orchestrates several manager modules to keep concerns separated:
 
-1. **World** — A 2000 × 2000 pixel cross/plus-sign shaped room, larger than the 800 × 600 viewport.
-2. **Drawing** — Renders the cross outline and fill (world space), several mid-air platforms, and three control buttons (screen space) using Phaser graphics.
-3. **Physics** — Four large static corner bodies block the cut-out regions of the cross; `setCollideWorldBounds(true)` handles the outer arm ends; static platforms and a dynamic circular player body; registers all colliders.
-4. **Camera** — Main camera follows the player with smooth lerp (0.1) and is clamped to the world bounds.
-5. **Input** — Handles both keyboard arrows and on-screen touch buttons (pinned to the viewport via `setScrollFactor(0)`).
-6. **Update loop** — Applies horizontal velocity and handles jump each frame.
+1. **PhysicsManager** — Creates and manages all physics bodies (corner walls, platforms, player body) and colliders.
+2. **GraphicsManager** — Handles all rendering: cross room interior/outline, platforms, and the control strip UI.
+3. **InputManager** — Manages keyboard and pointer input; maintains control strip state and visibility.
+4. **PlayerController** — Handles player movement logic (horizontal velocity, jumping, jump hold timer, double-jump).
+
+GameScene delegates to these modules in its `create()` and `update()` methods, keeping the scene class lean and focused on orchestration.
 
 ---
 
-## GameScene constants
+## Module architecture
 
-| Constant | Value | Meaning |
-|---|---|---|
-| `PLAYER_SPEED` | `200` | Horizontal speed (px/s) |
-| `JUMP_VELOCITY` | `-700` | Initial upward velocity applied when jumping |
-| `JUMP_HOLD_ACCEL` | `1800` | Extra upward acceleration while jump is briefly held |
-| `JUMP_HOLD_TIME` | `140` | Maximum hold duration in ms for a higher jump |
-| `JUMP_BTN_WIDTH` | `60` | Width of the jump button (px) |
-| `BTN_COLOR` | `0xaa88ff` | Purple colour for button borders and labels |
-| `WORLD_SIZE` | `2000` | Side length (px) of the square bounding box of the cross world |
-| `ARM_T` | `600` | Pixel thickness of each arm of the cross |
-| `CORNER` | `700` | Size of each square corner cut-out: `(WORLD_SIZE − ARM_T) / 2` |
+### `constants.js`
+Exports all game constants used across GameScene and manager modules. Includes:
+- Player movement: `PLAYER_SPEED`, `JUMP_VELOCITY`, `JUMP_HOLD_ACCEL`, `JUMP_HOLD_TIME`, `MAX_JUMPS`
+- UI: `JUMP_BTN_WIDTH`, `BTN_COLOR`, `CONTROL_STRIP_HEIGHT`
+- World geometry: `WORLD_SIZE`, `ARM_T`, `CORNER`
+- Graphics: `PLATFORM_HEIGHT`, `PLAYER_RADIUS`
 
-Layout variables (defined inside `create()`):
+### `PhysicsManager.js`
+Encapsulates all physics setup and collider creation:
+- **`setupPhysicsWorld()`** — Initializes world bounds and creates both corner walls and platforms.
+- **`createCornerWalls()`** — Creates the four static corner bodies that block cut-out regions.
+- **`createPlatforms()`** — Creates static colliders for all mid-air platforms.
+- **`createPlayerBody(x, y)`** — Creates the player physics body and registers all collisions.
+- **`getPlatformDefinitions()`** — Returns platform data for rendering.
 
-| Variable | Value | Meaning |
-|---|---|---|
-| `controlStripHeight` | `80` | Height of the on-screen button strip (px) |
-| `controlStripY` | `sh − 80` | Top Y of the button strip in screen space |
-| `platformHeight` | `16` | Height of each mid-air platform |
-| `playerRadius` | `18` | Radius of the player circle |
+### `GraphicsManager.js`
+Handles all visual rendering:
+- **`setupBackground()`** — Sets the camera background color.
+- **`drawCrossRoom()`** — Draws the cross-shaped room fill and outline (world space).
+- **`drawPlatforms(platformDefs)`** — Draws all platform rectangles (world space).
+- **`createControlStrip()`** — Creates the control strip UI (jump, left, right buttons) with graphics and labels; returns UI elements and zone definitions for input binding.
+
+### `InputManager.js`
+Manages keyboard and touch input:
+- **`setupInput()`** — Initializes cursor keys and sets up keyboard/pointer event handlers.
+- **`setupControlStripZones(zoneDefinitions)`** — Creates interactive zones for the three control buttons.
+- **`setControlStripVisible(isVisible)`** — Toggles control strip visibility and enables/disables zone interactivity.
+- **`setControlStripElements(elements)`** — Stores references to UI graphics and labels for visibility toggling.
+- **`getInputState()`** — Returns the current input state (cursor keys, button flags, jump held).
+- **`clearJumpPressed()`** — Resets the jump pressed flag after each update.
+
+### `PlayerController.js`
+Manages player movement, jumping, and state:
+- **`updateHorizontalMovement(inputState)`** — Applies horizontal velocity based on keyboard and on-screen button input.
+- **`updateJumpLogic(inputState, delta)`** — Handles jump initiation, double-jump, and jump-hold acceleration logic.
+- **`update(inputState, delta)`** — Main update method combining movement and jump logic.
+- **`getState()`** — Returns the player's current state (jumps used, jump timer, airborne status).
 
 ---
 
@@ -129,34 +151,26 @@ The strip is drawn with `setScrollFactor(0)` and spans the full viewport width a
 
 The interactive zones also use `setScrollFactor(0)` so pointer hit-testing works in screen coordinates regardless of camera scroll.
 
-Each button uses `pointerdown` / `pointerup` / `pointerout` to set a boolean state on the scene:
-- `this.jumpHeld`
-- `this.leftPressed`
-- `this.rightPressed`
+Button state is managed by InputManager:
+- When a button is pressed, InputManager sets `this.jumpHeld`, `this.leftPressed`, or `this.rightPressed` to `true`.
+- When a button is released or pointer leaves the zone, these flags are set to `false`.
+- Any pointer-down event shows the control strip again after it has been hidden by keyboard input.
 
-Any pointer-down event shows the control strip again after it has been hidden by keyboard input.
+### Update-loop flow
 
-### Movement logic (`update()`)
+The `GameScene.update()` method now delegates to the manager modules:
+
 ```javascript
-// Keyboard
-if (cursors.left.isDown)  vx = -PLAYER_SPEED;
-if (cursors.right.isDown) vx =  PLAYER_SPEED;
-
-// Touch buttons (override keyboard when active; left-priority if both held)
-if (this.leftPressed)       vx = -PLAYER_SPEED;
-else if (this.rightPressed) vx =  PLAYER_SPEED;
-
-player.body.setVelocityX(vx);
-
-// Jump starts on press and gains extra height if held briefly after takeoff
-if (jumpJustPressed && player.body.blocked.down) {
-  player.body.setVelocityY(JUMP_VELOCITY);
-}
-
-if (jumpDown && jumpHoldTimer > 0 && player.body.velocity.y < 0) {
-  player.body.setAccelerationY(-JUMP_HOLD_ACCEL);
+update(_, delta) {
+  const inputState = this.inputManager.getInputState();
+  this.playerController.update(inputState, delta);
+  this.inputManager.clearJumpPressed();
 }
 ```
+
+The player movement and jumping logic is now handled entirely by `PlayerController`:
+1. **Horizontal movement** — Checks keyboard and button states from `InputManager`, applies velocity.
+2. **Jump logic** — Detects jump press edges, manages jump hold timer, applies acceleration for higher arcs, and handles double-jump counts.
 
 ---
 
