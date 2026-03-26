@@ -26,7 +26,7 @@ export const CORNER = (WORLD_SIZE - ARM_T) / 2; // 700
 // Powerup locations
 // powerup x = platform left + half-width; powerup y = platform top - POWERUP_RADIUS
 export const POWERUP_POSITIONS = [
-  { x: CORNER + ARM_T + 450, y: CORNER + 78 },          // right arm outer platform
+  { x: CORNER + ARM_T + 450, y: CORNER + 160 },          // right arm outer platform
   { x: 120,                  y: CORNER + ARM_T - 162 }, // left arm inner platform
 ];
 
