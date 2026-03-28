@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import Phaser from "phaser";
 
 /**
  * PreloadScene — loads all game assets before any other scene runs.
@@ -7,19 +7,19 @@ import Phaser from 'phaser';
  */
 export default class PreloadScene extends Phaser.Scene {
   constructor() {
-    super({ key: 'PreloadScene' });
+    super({ key: "PreloadScene" });
   }
 
   preload() {
     this.#createLoadingBar();
 
-    this.load.tilemapTiledJSON('scene', 'assets/tiles/scene.json');
-    this.load.image('space-tiles', 'assets/tiles/space.png');
-    this.load.image('template-tiles', 'assets/tiles/template.png');
+    this.load.tilemapTiledJSON("scene", "assets/tiles/scene.json");
+    this.load.image("space-tiles", "assets/tiles/space.png");
+    this.load.image("template-tiles", "assets/tiles/template.png");
   }
 
   create() {
-    this.scene.start('MainMenuScene');
+    this.scene.start("MainMenuScene");
   }
 
   #createLoadingBar() {
@@ -40,14 +40,14 @@ export default class PreloadScene extends Phaser.Scene {
 
     // Label
     this.add
-      .text(width / 2, barY - 24, 'Loading...', {
-        fontSize: '18px',
-        color: '#ffffff',
+      .text(width / 2, barY - 24, "Loading...", {
+        fontSize: "18px",
+        color: "#ffffff",
       })
       .setOrigin(0.5, 0);
 
     // Update fill as assets load
-    this.load.on('progress', (value) => {
+    this.load.on("progress", (value) => {
       fillBar.width = barWidth * value;
     });
   }

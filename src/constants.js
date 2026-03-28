@@ -6,10 +6,10 @@ export const JUMP_HOLD_TIME = 200;
 export const MAX_JUMPS = 1;
 
 // UI constants
-export const JUMP_BTN_WIDTH = 100;
-export const DASH_BTN_WIDTH = 100;
+export const JUMP_BTN_WIDTH = 200;
+export const DASH_BTN_WIDTH = 200;
 export const BTN_COLOR = 0xaa88ff;
-export const CONTROL_STRIP_HEIGHT = 80;
+export const CONTROL_STRIP_HEIGHT = 200;
 
 // Dash constants
 export const DASH_SPEED = 600;
@@ -20,7 +20,7 @@ export const GLIDE_FALL_SPEED = 60;
 
 // World constants
 export const MAP_TILE_SIZE = 32;
-export const WORLD_SIZE = 1600;
+export const WORLD_SIZE = 3200;
 
 // Powerup locations
 // powerup x = platform center column × tile size; powerup y = platform row × tile size - radius

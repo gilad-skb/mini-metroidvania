@@ -29,7 +29,7 @@ export default class GameScene extends Phaser.Scene {
     this.physicsManager.setupPhysicsWorld();
     this.player = this.physicsManager.createPlayerBody(
       WORLD_SIZE / 2,
-      40 * MAP_TILE_SIZE - PLAYER_RADIUS - 1,
+      40 * 2 * MAP_TILE_SIZE - PLAYER_RADIUS - 1,
     );
 
     // Initialize player controller
@@ -52,6 +52,7 @@ export default class GameScene extends Phaser.Scene {
     // Set up camera
     this.cameras.main.setBounds(0, 0, WORLD_SIZE, WORLD_SIZE);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    this.cameras.main.setZoom(.75);
 
     // Create control strip UI
     const controlUI = this.graphicsManager.createControlStrip();

@@ -26,6 +26,7 @@ export class PhysicsManager {
     const spaceTileset = this.map.addTilesetImage('space', 'space-tiles');
     const templateTileset = this.map.addTilesetImage('template', 'template-tiles');
     this.layer = this.map.createLayer('Tile Layer 1', [spaceTileset, templateTileset], 0, 0);
+    this.layer.setScale(2);
     // all non-empty tiles are collidable
     this.layer.setCollisionByExclusion([-1, 0]);
   }
