@@ -1,5 +1,8 @@
 {
   "files.associations": {
-    "*.tsx": "xml"
+    ".other/tiles/**/*.tsx": "xml",
+    ".other/tiles/**/*.tmx": "xml",
+    "public/assets/tiles/*.tsx": "xml",
+    "public/assets/tiles/*.tmx": "xml"
   }
 }

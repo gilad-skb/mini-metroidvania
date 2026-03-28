@@ -13,9 +13,9 @@ export default class PreloadScene extends Phaser.Scene {
   preload() {
     this.#createLoadingBar();
 
-    // TODO: load game assets here, e.g.:
-    // this.load.image('player', 'assets/player.png');
-    // this.load.tilemapTiledJSON('map', 'assets/map.json');
+    this.load.tilemapTiledJSON('scene', 'assets/tiles/scene.json');
+    this.load.image('space-tiles', 'assets/tiles/space.png');
+    this.load.image('template-tiles', 'assets/tiles/template.png');
   }
 
   create() {

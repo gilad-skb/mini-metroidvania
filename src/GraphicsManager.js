@@ -1,7 +1,7 @@
-import { WORLD_SIZE, ARM_T, CORNER, PLATFORM_HEIGHT, BTN_COLOR, JUMP_BTN_WIDTH, DASH_BTN_WIDTH, CONTROL_STRIP_HEIGHT } from './constants.js';
+import { BTN_COLOR, JUMP_BTN_WIDTH, DASH_BTN_WIDTH, CONTROL_STRIP_HEIGHT } from './constants.js';
 
 /**
- * GraphicsManager — handles all rendering: cross room, platforms, and UI controls.
+ * GraphicsManager — handles background and UI controls.
  */
 export class GraphicsManager {
   constructor(scene) {
@@ -13,54 +13,6 @@ export class GraphicsManager {
    */
   setupBackground() {
     this.scene.cameras.main.setBackgroundColor('#1a1a2e');
-  }
-
-  /**
-   * Draw the cross-shaped room interior and outline.
-   */
-  drawCrossRoom() {
-    const graphics = this.scene.add.graphics();
-
-    // Fill cross interior with a slightly lighter dark-blue tint
-    graphics.fillStyle(0x0d2137, 1);
-    graphics.fillRect(CORNER, 0, ARM_T, WORLD_SIZE); // vertical arm
-    graphics.fillRect(0, CORNER, WORLD_SIZE, ARM_T); // horizontal arm
-
-    // 12-segment cross outline
-    graphics.lineStyle(4, 0x44aaff, 1);
-    graphics.beginPath();
-    graphics.moveTo(CORNER, 0);
-    graphics.lineTo(CORNER + ARM_T, 0);
-    graphics.lineTo(CORNER + ARM_T, CORNER);
-    graphics.lineTo(WORLD_SIZE, CORNER);
-    graphics.lineTo(WORLD_SIZE, CORNER + ARM_T);
-    graphics.lineTo(CORNER + ARM_T, CORNER + ARM_T);
-    graphics.lineTo(CORNER + ARM_T, WORLD_SIZE);
-    graphics.lineTo(CORNER, WORLD_SIZE);
-    graphics.lineTo(CORNER, CORNER + ARM_T);
-    graphics.lineTo(0, CORNER + ARM_T);
-    graphics.lineTo(0, CORNER);
-    graphics.lineTo(CORNER, CORNER);
-    graphics.closePath();
-    graphics.strokePath();
-
-    return graphics;
-  }
-
-  /**
-   * Draw all platforms in the level.
-   */
-  drawPlatforms(platformDefs) {
-    const graphics = this.scene.add.graphics();
-
-    platformDefs.forEach(({ x, y, w }) => {
-      graphics.fillStyle(0x44aaff, 0.25);
-      graphics.fillRect(x, y, w, PLATFORM_HEIGHT);
-      graphics.lineStyle(2, 0x44aaff, 1);
-      graphics.strokeRect(x, y, w, PLATFORM_HEIGHT);
-    });
-
-    return graphics;
   }
 
   /**

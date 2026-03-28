@@ -19,19 +19,17 @@ export const DASH_DURATION = 150;
 export const GLIDE_FALL_SPEED = 60;
 
 // World constants
-export const WORLD_SIZE = 2000;
-export const ARM_T = 600;
-export const CORNER = (WORLD_SIZE - ARM_T) / 2; // 700
+export const MAP_TILE_SIZE = 32;
+export const WORLD_SIZE = 1600;
 
 // Powerup locations
-// powerup x = platform left + half-width; powerup y = platform top - POWERUP_RADIUS
+// powerup x = platform center column × tile size; powerup y = platform row × tile size - radius
+export const POWERUP_RADIUS = 12;
 export const POWERUP_POSITIONS = [
-  { x: CORNER + ARM_T + 450, y: CORNER + 78 },          // right arm outer platform
-  { x: 120,                  y: CORNER + ARM_T - 162 }, // left arm inner platform
+  { x: 35 * MAP_TILE_SIZE, y: 23 * MAP_TILE_SIZE - POWERUP_RADIUS },
+  { x: 13 * MAP_TILE_SIZE, y: 24 * MAP_TILE_SIZE - POWERUP_RADIUS },
 ];
 
 // Graphics constants
-export const PLATFORM_HEIGHT = 16;
 export const PLAYER_RADIUS = 18;
-export const POWERUP_RADIUS = 12;
 export const POWERUP_COLOR = 0xffaa00;
