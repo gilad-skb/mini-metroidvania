@@ -1,14 +1,18 @@
-import Phaser from 'phaser';
-import { WORLD_SIZE, PLAYER_RADIUS, CONTROL_STRIP_HEIGHT } from '../constants.js';
-import { PhysicsManager } from '../PhysicsManager.js';
-import { GraphicsManager } from '../GraphicsManager.js';
-import { InputManager } from '../InputManager.js';
-import { PlayerController } from '../PlayerController.js';
-import { PowerupManager } from '../PowerupManager.js';
+import Phaser from "phaser";
+import {
+  WORLD_SIZE,
+  PLAYER_RADIUS,
+  CONTROL_STRIP_HEIGHT,
+} from "../constants.js";
+import { PhysicsManager } from "../PhysicsManager.js";
+import { GraphicsManager } from "../GraphicsManager.js";
+import { InputManager } from "../InputManager.js";
+import { PlayerController } from "../PlayerController.js";
+import { PowerupManager } from "../PowerupManager.js";
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
-    super({ key: 'GameScene' });
+    super({ key: "GameScene" });
     this.physicsManager = null;
     this.graphicsManager = null;
     this.inputManager = null;
@@ -16,6 +20,7 @@ export default class GameScene extends Phaser.Scene {
     this.powerupManager = null;
     this.minimapCamera = null;
     this.minimapMarker = null;
+    this.won = false;
   }
 
   create() {
@@ -48,15 +53,15 @@ export default class GameScene extends Phaser.Scene {
     this.powerupManager.setupCollision(this.player, [
       () => {
         this.playerController.enableDoubleJump();
-        this.showPickupPrompt('found double jump!');
+        this.showPickupPrompt("found double jump!");
       },
       () => {
         this.playerController.enableGlide();
-        this.showPickupPrompt('found glide!');
+        this.showPickupPrompt("found glide!");
       },
       () => {
+        this.showPickupPrompt("you win!");
         this.handleWin();
-        this.showPickupPrompt('you win!');
       },
     ]);
 
@@ -74,25 +79,33 @@ export default class GameScene extends Phaser.Scene {
     this.inputManager.setupControlStripZones(controlUI.zones);
 
     // Create minimap
-    const { minimapCamera, borderGraphics } = this.graphicsManager.createMinimap();
+    const { minimapCamera, borderGraphics } =
+      this.graphicsManager.createMinimap();
     this.minimapCamera = minimapCamera;
     this.minimapCamera.startFollow(this.player, true, 0.1, 0.1);
 
     // player marker: a world-space circle only the minimap sees
     // radius 80 world-px → ~4px on the minimap at 0.05 zoom
-    this.minimapMarker = this.add.circle(this.player.x, this.player.y, 60, 0xffffff).setDepth(5);
+    this.minimapMarker = this.add
+      .circle(this.player.x, this.player.y, 60, 0xffffff)
+      .setDepth(5);
     this.minimapMarker.setDepth(5);
     this.cameras.main.ignore(this.minimapMarker);
 
     // hide UI and border frame from the minimap camera
-    this.minimapCamera.ignore([controlUI.uiGraphics, ...controlUI.labels, borderGraphics]);
+    this.minimapCamera.ignore([
+      controlUI.uiGraphics,
+      ...controlUI.labels,
+      borderGraphics,
+    ]);
 
     // Set up input
     this.inputManager.setupInput();
   }
 
   update(_, delta) {
-    if (!this.player || !this.player.body || !this.playerController) return;
+    if (!this.player || !this.player.body || !this.playerController || this.won)
+      return;
 
     const inputState = this.inputManager.getInputState();
     this.playerController.update(inputState, delta);
@@ -110,12 +123,16 @@ export default class GameScene extends Phaser.Scene {
    */
   showPickupPrompt(message) {
     const { width: sw, height: sh } = this.scale;
-    const text = this.add.text(sw / 2, sh / 2, message, {
-      fontSize: '28px',
-      color: '#ffaa00',
-      stroke: '#000000',
-      strokeThickness: 4,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(10);
+    const text = this.add
+      .text(sw / 2, sh / 2, message, {
+        fontSize: "28px",
+        color: "#ffaa00",
+        stroke: "#000000",
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(10);
 
     // pickup prompts are UI-only; hide from minimap
     if (this.minimapCamera) {
@@ -128,6 +145,15 @@ export default class GameScene extends Phaser.Scene {
       delay: 1700,
       duration: 300,
       onComplete: () => text.destroy(),
+    });
+  }
+
+  handleWin() {
+    // this.player.body.setVelocity(0, 0);
+    // this.player.body.allowGravity = false;
+    this.time.delayedCall(2000, () => {
+      // this.player.body.allowGravity = true;
+      this.scene.restart();
     });
   }
 }
