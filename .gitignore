@@ -1,4 +1,4 @@
-.vite/
-.other/
 node_modules/
 dist/
+.vite/
+.other/
