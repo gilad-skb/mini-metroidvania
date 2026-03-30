@@ -76,10 +76,11 @@ export default class GameScene extends Phaser.Scene {
     // Create minimap
     const { minimapCamera, borderGraphics } = this.graphicsManager.createMinimap();
     this.minimapCamera = minimapCamera;
+    this.minimapCamera.startFollow(this.player, true, 0.1, 0.1);
 
     // player marker: a world-space circle only the minimap sees
     // radius 80 world-px → ~4px on the minimap at 0.05 zoom
-    this.minimapMarker = this.add.circle(this.player.x, this.player.y, 80, 0xffffff).setDepth(5);
+    this.minimapMarker = this.add.circle(this.player.x, this.player.y, 60, 0xffffff).setDepth(5);
     this.minimapMarker.setDepth(5);
     this.cameras.main.ignore(this.minimapMarker);
 
