@@ -27,8 +27,14 @@ export class PhysicsManager {
     const templateTileset = this.map.addTilesetImage('template', 'template-tiles');
     this.layer = this.map.createLayer('Tile Layer 1', [spaceTileset, templateTileset], 0, 0);
     this.layer.setScale(2);
-    // all non-empty tiles are collidable
-    this.layer.setCollisionByExclusion([-1, 0]);
+
+    // prefer collision shapes authored in Tiled tile collision editor
+    this.layer.setCollisionFromCollisionGroup();
+
+    // fallback if no collision groups were authored on tiles
+    // if (this.layer.collideIndexes?.length === 0) {
+    //   this.layer.setCollisionByExclusion([-1, 0]);
+    // }
   }
 
   /**

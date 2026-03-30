@@ -14,6 +14,8 @@ export default class GameScene extends Phaser.Scene {
     this.inputManager = null;
     this.playerController = null;
     this.powerupManager = null;
+    this.minimapCamera = null;
+    this.minimapMarker = null;
   }
 
   create() {
@@ -47,6 +49,10 @@ export default class GameScene extends Phaser.Scene {
         this.playerController.enableGlide();
         this.showPickupPrompt('found glide!');
       },
+      () => {
+        this.handleWin();
+        this.showPickupPrompt('you win!');
+      },
     ]);
 
     // Set up camera
@@ -62,6 +68,19 @@ export default class GameScene extends Phaser.Scene {
     ]);
     this.inputManager.setupControlStripZones(controlUI.zones);
 
+    // Create minimap
+    const { minimapCamera, borderGraphics } = this.graphicsManager.createMinimap();
+    this.minimapCamera = minimapCamera;
+
+    // player marker: a world-space circle only the minimap sees
+    // radius 80 world-px → ~4px on the minimap at 0.05 zoom
+    this.minimapMarker = this.add.circle(this.player.x, this.player.y, 80, 0xffffff).setDepth(5);
+    this.minimapMarker.setDepth(5);
+    this.cameras.main.ignore(this.minimapMarker);
+
+    // hide UI and border frame from the minimap camera
+    this.minimapCamera.ignore([controlUI.uiGraphics, ...controlUI.labels, borderGraphics]);
+
     // Set up input
     this.inputManager.setupInput();
   }
@@ -73,6 +92,11 @@ export default class GameScene extends Phaser.Scene {
     this.playerController.update(inputState, delta);
     this.inputManager.clearJumpPressed();
     this.inputManager.clearDashPressed();
+
+    // sync minimap player marker to current player position
+    if (this.minimapMarker) {
+      this.minimapMarker.setPosition(this.player.x, this.player.y);
+    }
   }
 
   /**
@@ -86,6 +110,11 @@ export default class GameScene extends Phaser.Scene {
       stroke: '#000000',
       strokeThickness: 4,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(10);
+
+    // pickup prompts are UI-only; hide from minimap
+    if (this.minimapCamera) {
+      this.minimapCamera.ignore(text);
+    }
 
     this.tweens.add({
       targets: text,

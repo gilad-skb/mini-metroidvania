@@ -1,4 +1,4 @@
-import { BTN_COLOR, JUMP_BTN_WIDTH, DASH_BTN_WIDTH, CONTROL_STRIP_HEIGHT } from './constants.js';
+import { BTN_COLOR, JUMP_BTN_WIDTH, DASH_BTN_WIDTH, CONTROL_STRIP_HEIGHT, WORLD_SIZE } from './constants.js';
 
 /**
  * GraphicsManager — handles background and UI controls.
@@ -93,5 +93,33 @@ export class GraphicsManager {
         { x: rightBtnX + dirBtnWidth / 2, y: controlStripY + CONTROL_STRIP_HEIGHT / 2, w: dirBtnWidth, h: CONTROL_STRIP_HEIGHT },
       ],
     };
+  }
+
+  /**
+   * Create a minimap camera in the top-right corner showing the full world.
+   * Returns { minimapCamera, borderGraphics } for the caller to set up ignores.
+   */
+  createMinimap() {
+    const size = 120;
+    const margin = 10;
+    const { width: sw } = this.scene.scale;
+    const x = sw - size - margin;
+    const y = margin;
+    const zoom = size / WORLD_SIZE * 1.5;
+
+    const minimapCamera = this.scene.cameras.add(x, y, size, size);
+    minimapCamera.setZoom(zoom);
+    minimapCamera.centerOn(WORLD_SIZE / 2, WORLD_SIZE / 2);
+    minimapCamera.setBackgroundColor('#0d0d17');
+    minimapCamera.setAlpha(0.8);
+
+    // border drawn by the main camera only (scrollFactor has no effect on graphics
+    // objects added at screen coords when the camera using them is separate — so we
+    // draw the frame as a fixed UI element and later ignore it on the minimap camera)
+    const borderGraphics = this.scene.add.graphics().setScrollFactor(0).setDepth(20);
+    borderGraphics.lineStyle(2, BTN_COLOR, 1);
+    // borderGraphics.strokeRect(x, y, size, size);
+
+    return { minimapCamera, borderGraphics };
   }
 }

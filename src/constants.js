@@ -1,6 +1,6 @@
 // Game constants
 export const PLAYER_SPEED = 200;
-export const JUMP_VELOCITY = -400;
+export const JUMP_VELOCITY = -450;
 export const JUMP_HOLD_ACCEL = 1800;
 export const JUMP_HOLD_TIME = 200;
 export const MAX_JUMPS = 1;
@@ -26,10 +26,11 @@ export const WORLD_SIZE = 3200;
 // powerup x = platform center column × tile size; powerup y = platform row × tile size - radius
 export const POWERUP_RADIUS = 12;
 export const POWERUP_POSITIONS = [
-  { x: 35 * MAP_TILE_SIZE, y: 23 * MAP_TILE_SIZE - POWERUP_RADIUS },
-  { x: 13 * MAP_TILE_SIZE, y: 24 * MAP_TILE_SIZE - POWERUP_RADIUS },
+  { x: 35 * MAP_TILE_SIZE, y: 23 * MAP_TILE_SIZE - POWERUP_RADIUS }, // double jump
+  { x: 13 * MAP_TILE_SIZE, y: 24 * MAP_TILE_SIZE - POWERUP_RADIUS }, // glide
+  { x: 29 * MAP_TILE_SIZE, y: 8 * MAP_TILE_SIZE - POWERUP_RADIUS }, // win
 ];
 
 // Graphics constants
-export const PLAYER_RADIUS = 18;
+export const PLAYER_RADIUS = 14;
 export const POWERUP_COLOR = 0xffaa00;
